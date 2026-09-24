@@ -6,8 +6,9 @@ import { issueCertificatesAsync } from './issueCertificatesAsync.js';
 describe('issueCertificatesAsync', () => {
   test('issues each unique domain independently', async () => {
     const issued: string[] = [];
-    const runtime = createRuntime(async ({ domain }) => {
+    const runtime = createRuntime(({ domain }) => {
       issued.push(domain);
+      return Promise.resolve();
     });
     await issueCertificatesAsync(runtime, {
       domains: ['a.example.com', 'a.example.com', 'b.example.com'],
@@ -18,13 +19,11 @@ describe('issueCertificatesAsync', () => {
 });
 
 /*** Create a deterministic fake runtime for issue orchestration tests. */
-function createRuntime(
-  issueAsync: CertificateRuntimePort['issueAsync'],
-): CertificateRuntimePort {
+function createRuntime(issueAsync: CertificateRuntimePort['issueAsync']): CertificateRuntimePort {
   return {
     issueAsync,
-    preflightAsync: async () => [],
-    renewAsync: async () => undefined,
-    statusAsync: async () => '',
+    preflightAsync: () => Promise.resolve([]),
+    renewAsync: () => Promise.resolve(),
+    statusAsync: () => Promise.resolve(''),
   };
 }

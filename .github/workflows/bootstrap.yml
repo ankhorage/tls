@@ -37,6 +37,11 @@ jobs:
       - name: Keep workflow ownership outside the bootstrap commit
         run: git restore --source=HEAD -- .github/workflows
 
+      - name: Apply canonical source formatting
+        run: |
+          bun run lint:fix
+          bun run format
+
       - name: Build
         run: bun run build
 

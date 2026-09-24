@@ -6,8 +6,8 @@ import { checkIssueReadinessAsync } from './checkIssueReadinessAsync.js';
 describe('checkIssueReadinessAsync', () => {
   test('keeps syntax checks before runtime checks', async () => {
     const runtime = createRuntime();
-    const checks = await checkIssueReadinessAsync(runtime, ['flector.ankhorage.com']);
-    expect(checks.map(({ id }) => id)).toEqual(['domain:flector.ankhorage.com', 'docker']);
+    const checks = await checkIssueReadinessAsync(runtime, ['app.example.com']);
+    expect(checks.map(({ id }) => id)).toEqual(['domain:app.example.com', 'docker']);
   });
 
   test('does not invoke runtime preflight when every hostname is invalid', async () => {
@@ -24,12 +24,14 @@ describe('checkIssueReadinessAsync', () => {
 /*** Create a deterministic fake certificate runtime for readiness tests. */
 function createRuntime(onPreflight: () => void = () => undefined): CertificateRuntimePort {
   return {
-    issueAsync: async () => undefined,
-    preflightAsync: async () => {
+    issueAsync: () => Promise.resolve(),
+    preflightAsync: () => {
       onPreflight();
-      return [{ id: 'docker', label: 'Docker daemon', message: 'ok', status: 'pass' }];
+      return Promise.resolve([
+        { id: 'docker', label: 'Docker daemon', message: 'ok', status: 'pass' },
+      ]);
     },
-    renewAsync: async () => undefined,
-    statusAsync: async () => '',
+    renewAsync: () => Promise.resolve(),
+    statusAsync: () => Promise.resolve(''),
   };
 }
