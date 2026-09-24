@@ -37,6 +37,8 @@ function createDomainSyntaxCheck(domain: string): TlsPreflightCheck {
     status: valid ? 'pass' : 'fail',
     ...(valid
       ? {}
-      : { tip: 'Use a DNS hostname only; omit https://, paths, ports, wildcards, and trailing dots.' }),
+      : {
+          tip: 'Use a DNS hostname only; omit https://, paths, ports, wildcards, and trailing dots.',
+        }),
   };
 }

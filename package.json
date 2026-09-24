@@ -20,14 +20,23 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ankhorage/tls.git"
   },
   "homepage": "https://github.com/ankhorage/tls#readme",
-  "bugs": { "url": "https://github.com/ankhorage/tls/issues" },
+  "bugs": {
+    "url": "https://github.com/ankhorage/tls/issues"
+  },
   "keywords": [
     "tls",
     "ssl",

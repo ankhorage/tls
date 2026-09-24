@@ -1,10 +1,10 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { RenewalSchedulerPort } from '../../../application/ports/outbound/renewalSchedulerPort.js';
 import type { RunProcessAsync } from '../../../../../types/process.js';
 import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
 import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
+import type { RenewalSchedulerPort } from '../../../application/ports/outbound/renewalSchedulerPort.js';
 import { renderSystemdRenewalUnits } from './renderSystemdRenewalUnits.js';
 
 interface CreateSystemdRenewalSchedulerOptions {
@@ -69,10 +69,7 @@ export function createSystemdRenewalScheduler(
 }
 
 /*** Read one concise process status message. */
-function readProcessMessage(result: {
-  readonly stderr: string;
-  readonly stdout: string;
-}): string {
+function readProcessMessage(result: { readonly stderr: string; readonly stdout: string }): string {
   return result.stdout.trim() || result.stderr.trim() || 'unknown';
 }
 

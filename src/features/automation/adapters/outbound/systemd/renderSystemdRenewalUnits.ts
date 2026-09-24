@@ -4,9 +4,10 @@ interface RenderSystemdRenewalUnitsInput {
 }
 
 /*** Render deterministic systemd service and timer units for daily TLS renewal checks. */
-export function renderSystemdRenewalUnits(
-  input: RenderSystemdRenewalUnitsInput,
-): { readonly service: string; readonly timer: string } {
+export function renderSystemdRenewalUnits(input: RenderSystemdRenewalUnitsInput): {
+  readonly service: string;
+  readonly timer: string;
+} {
   validateStorageVolumeName(input.storageVolumeName);
 
   const command = [

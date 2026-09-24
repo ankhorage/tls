@@ -9,7 +9,8 @@ export const enable: AnkhCommandHandler = async (request) => {
   try {
     const storageVolumeName = parseStorageVolume(request.argv);
     const [, entrypoint] = process.argv;
-    if (entrypoint === undefined) throw new Error('Could not resolve the running Ankh CLI entrypoint.');
+    if (entrypoint === undefined)
+      throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
     const scheduler = createSystemdRenewalScheduler({
       ankhCommand: [process.execPath, entrypoint],

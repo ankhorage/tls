@@ -7,7 +7,9 @@ export interface CertificateRuntimePort {
     readonly forceRenewal: boolean;
     readonly staging: boolean;
   }): Promise<void>;
-  preflightAsync(input: { readonly domains: readonly string[] }): Promise<readonly TlsPreflightCheck[]>;
+  preflightAsync(input: {
+    readonly domains: readonly string[];
+  }): Promise<readonly TlsPreflightCheck[]>;
   renewAsync(input: { readonly dryRun: boolean }): Promise<void>;
   statusAsync(): Promise<string>;
 }

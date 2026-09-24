@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 
+import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
+import type { RunProcessAsync } from '../../../../../types/process.js';
 import {
   CERTBOT_IMAGE,
   CERTBOT_STORAGE_VOLUME,
   CERTBOT_WEBROOT,
 } from '../../../constants/certbot.js';
-import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
-import type { RunProcessAsync } from '../../../../../types/process.js';
 
 interface DockerTlsPreflightOptions {
   readonly dockerExecutable?: string;
@@ -72,9 +72,7 @@ async function finishHttp01PreflightAsync(input: {
   );
   if (!prepared.ok) return [...input.base, webroot, ...input.dns];
 
-  const http = await Promise.all(
-    input.domains.map((domain) => probeHttpAsync(domain, token)),
-  );
+  const http = await Promise.all(input.domains.map((domain) => probeHttpAsync(domain, token)));
   await removeChallengeAsync(input, token);
   return [...input.base, webroot, ...input.dns, ...http];
 }
@@ -157,10 +155,7 @@ async function probeHttpAsync(domain: string, token: string): Promise<TlsPreflig
 }
 
 /*** Write one temporary HTTP-01 token through the configured Docker storage volume. */
-async function writeChallengeAsync(
-  input: DockerCommandInput,
-  token: string,
-): Promise<ProbeResult> {
+async function writeChallengeAsync(input: DockerCommandInput, token: string): Promise<ProbeResult> {
   return probeCommandAsync(
     input.dockerExecutable,
     [
@@ -180,10 +175,7 @@ async function writeChallengeAsync(
 }
 
 /*** Remove the temporary readiness token after the HTTP roundtrip. */
-async function removeChallengeAsync(
-  input: DockerCommandInput,
-  token: string,
-): Promise<void> {
+async function removeChallengeAsync(input: DockerCommandInput, token: string): Promise<void> {
   await input.runProcessAsync(input.dockerExecutable, [
     'run',
     '--rm',

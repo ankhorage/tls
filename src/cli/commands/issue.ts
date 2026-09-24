@@ -87,9 +87,7 @@ function parseTokens(argv: readonly string[], parsed: IssueParseState): IssuePar
     }
     return parseTokens(
       rest,
-      token === '--email'
-        ? { ...parsed, email: value }
-        : { ...parsed, storageVolumeName: value },
+      token === '--email' ? { ...parsed, email: value } : { ...parsed, storageVolumeName: value },
     );
   }
 
