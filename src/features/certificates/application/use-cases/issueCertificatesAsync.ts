@@ -1,6 +1,7 @@
+import { isHttp01Domain } from '../../domain/isHttp01Domain.js';
 import type { CertificateRuntimePort } from '../ports/outbound/certificateRuntimePort.js';
 
-/*** Issue one independently renewable certificate for every requested domain. */
+/*** Issue one independently renewable certificate for every unique validated domain. */
 export async function issueCertificatesAsync(
   runtime: CertificateRuntimePort,
   input: {
@@ -13,7 +14,11 @@ export async function issueCertificatesAsync(
   if (input.domains.length === 0) throw new Error('At least one domain is required.');
   if (input.email.trim() === '') throw new Error('A non-empty ACME account email is required.');
 
-  for (const domain of [...new Set(input.domains)]) {
+  const domains = [...new Set(input.domains)];
+  const invalid = domains.find((domain) => !isHttp01Domain(domain));
+  if (invalid !== undefined) throw new Error(`Invalid HTTP-01 domain: ${invalid}`);
+
+  for (const domain of domains) {
     await runtime.issueAsync({
       domain,
       email: input.email,
