@@ -8,7 +8,7 @@ import { CERTBOT_STORAGE_VOLUME } from '../../../features/certificates/constants
 export const enable: AnkhCommandHandler = async (request) => {
   try {
     const storageVolumeName = parseStorageVolume(request.argv);
-    const entrypoint = process.argv[1];
+    const [, entrypoint] = process.argv;
     if (entrypoint === undefined) throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
     const scheduler = createSystemdRenewalScheduler({
