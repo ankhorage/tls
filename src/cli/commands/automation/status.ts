@@ -9,7 +9,7 @@ export const status: AnkhCommandHandler = async (request) => {
     if (request.argv.length !== 0) {
       throw new Error('Usage: ankh tls automation status');
     }
-    const entrypoint = process.argv[1];
+    const [, entrypoint] = process.argv;
     if (entrypoint === undefined) throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
     const scheduler = createSystemdRenewalScheduler({
