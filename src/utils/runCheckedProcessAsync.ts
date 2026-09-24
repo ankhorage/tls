@@ -1,4 +1,4 @@
-import type { RunProcessAsync } from '../../../types/process.js';
+import type { RunProcessAsync } from '../types/process.js';
 
 /*** Run one process and throw captured diagnostics on failure. */
 export async function runCheckedProcessAsync(

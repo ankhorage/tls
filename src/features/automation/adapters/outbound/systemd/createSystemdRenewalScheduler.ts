@@ -3,8 +3,8 @@ import { join } from 'node:path';
 
 import type { RenewalSchedulerPort } from '../../../application/ports/outbound/renewalSchedulerPort.js';
 import type { RunProcessAsync } from '../../../../../types/process.js';
-import { runCheckedProcessAsync } from '../../../../certificates/utils/runCheckedProcessAsync.js';
-import { runProcessAsync as defaultRunProcessAsync } from '../../../../certificates/utils/runProcessAsync.js';
+import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
+import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import { renderSystemdRenewalUnits } from './renderSystemdRenewalUnits.js';
 
 interface CreateSystemdRenewalSchedulerOptions {
@@ -61,11 +61,19 @@ export function createSystemdRenewalScheduler(
       ]);
       return {
         active: active.exitCode === 0,
-        detail: `${enabled.stdout.trim() || enabled.stderr.trim() || 'unknown'} / ${active.stdout.trim() || active.stderr.trim() || 'unknown'}`,
+        detail: `${readProcessMessage(enabled)} / ${readProcessMessage(active)}`,
         enabled: enabled.exitCode === 0,
       };
     },
   };
+}
+
+/*** Read one concise process status message. */
+function readProcessMessage(result: {
+  readonly stderr: string;
+  readonly stdout: string;
+}): string {
+  return result.stdout.trim() || result.stderr.trim() || 'unknown';
 }
 
 /*** Reject systemd scheduling on non-Linux hosts with an actionable error. */

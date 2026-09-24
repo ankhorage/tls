@@ -8,8 +8,8 @@ import {
 } from '../../../constants/certbot.js';
 import type { CertificateRuntimePort } from '../../../application/ports/outbound/certificateRuntimePort.js';
 import type { RunProcessAsync } from '../../../../../types/process.js';
-import { runCheckedProcessAsync } from '../../../utils/runCheckedProcessAsync.js';
-import { runProcessAsync as defaultRunProcessAsync } from '../../../utils/runProcessAsync.js';
+import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
+import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import { runDockerTlsPreflightAsync } from './runDockerTlsPreflightAsync.js';
 
 interface CreateDockerCertbotRuntimeOptions {

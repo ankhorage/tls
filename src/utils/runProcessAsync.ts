@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-import type { ProcessResult } from '../../../types/process.js';
+import type { ProcessResult } from '../types/process.js';
 
 /*** Execute a process while capturing deterministic stdout and stderr. */
 export function runProcessAsync(
