@@ -1,7 +1,7 @@
 {
   "name": "@ankhorage/tls",
   "version": "0.0.0",
-  "description": "Provider-agnostic TLS certificate lifecycle for Ankhorage.",
+  "description": "Provider-agnostic TLS certificate lifecycle and automation.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -28,11 +28,27 @@
   },
   "homepage": "https://github.com/ankhorage/tls#readme",
   "bugs": { "url": "https://github.com/ankhorage/tls/issues" },
-  "keywords": ["ankhorage", "tls", "acme", "certbot", "letsencrypt", "cli"],
+  "keywords": [
+    "tls",
+    "ssl",
+    "acme",
+    "certificates",
+    "certbot",
+    "letsencrypt",
+    "automation",
+    "cli"
+  ],
   "ankh": {
     "category": "tls",
     "provider": "./dist/cli/index.js",
-    "capabilities": ["tls.issue", "tls.renew", "tls.status"]
+    "capabilities": [
+      "tls.issue",
+      "tls.renew",
+      "tls.status",
+      "tls.automation.enable",
+      "tls.automation.status",
+      "tls.automation.disable"
+    ]
   },
   "scripts": {
     "build": "rm -rf dist tsconfig.tsbuildinfo && bun x tsc -p tsconfig.json",

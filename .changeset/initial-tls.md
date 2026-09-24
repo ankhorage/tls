@@ -2,4 +2,4 @@
 "@ankhorage/tls": minor
 ---
 
-Bootstrap the TLS lifecycle package with Certbot-backed issue, renewal, status, and HTTP-01 readiness checks.
+Initial standalone TLS lifecycle with HTTP-01 readiness checks, Certbot-backed issuance and renewal, certificate status, and systemd renewal automation.
