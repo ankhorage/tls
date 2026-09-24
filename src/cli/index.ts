@@ -23,7 +23,7 @@ const provider = {
       path: ['issue'],
       capability: ISSUE_CAPABILITY,
       summary: 'Preflight HTTP-01 prerequisites and issue one certificate per domain.',
-      examples: ['ankh tls issue flector.ankhorage.com --email admin@ankhorage.com'],
+      examples: ['ankh tls issue app.example.com --email admin@example.com'],
     },
     {
       path: ['renew'],
@@ -51,8 +51,10 @@ function readPackageVersion(): string {
   const packageJson = JSON.parse(
     readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
   ) as { readonly version?: unknown };
+
   if (typeof packageJson.version !== 'string' || packageJson.version.trim() === '') {
     throw new Error('@ankhorage/tls package.json must define a non-empty version.');
   }
+
   return packageJson.version;
 }

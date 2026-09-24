@@ -3,8 +3,8 @@ import { lookup } from 'node:dns/promises';
 
 import {
   CERTBOT_IMAGE,
+  CERTBOT_STORAGE_VOLUME,
   CERTBOT_WEBROOT,
-  CERTBOT_VOLUME,
 } from '../../../constants/certbot.js';
 import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
 import type { RunProcessAsync } from '../../../../../types/process.js';
@@ -14,43 +14,44 @@ interface DockerTlsPreflightOptions {
   readonly domains: readonly string[];
   readonly image?: string;
   readonly runProcessAsync: RunProcessAsync;
-  readonly volumeName?: string;
+  readonly storageVolumeName?: string;
 }
 
-/*** Probe Docker, shared storage, DNS, port 80 routing, and the live HTTP-01 webroot. */
+/*** Probe Docker, configured storage, DNS, port 80 routing, and the live HTTP-01 webroot. */
 export async function runDockerTlsPreflightAsync(
   options: DockerTlsPreflightOptions,
 ): Promise<readonly TlsPreflightCheck[]> {
-  const dockerExecutable = options.dockerExecutable ?? 'docker';
-  const image = options.image ?? CERTBOT_IMAGE;
-  const volumeName = options.volumeName ?? CERTBOT_VOLUME;
+  const runtime = {
+    dockerExecutable: options.dockerExecutable ?? 'docker',
+    image: options.image ?? CERTBOT_IMAGE,
+    runProcessAsync: options.runProcessAsync,
+    storageVolumeName: options.storageVolumeName ?? CERTBOT_STORAGE_VOLUME,
+  };
   const docker = await probeCommandAsync(
-    dockerExecutable,
+    runtime.dockerExecutable,
     ['version', '--format', '{{.Server.Version}}'],
-    options.runProcessAsync,
+    runtime.runProcessAsync,
   );
-  const volume = docker.ok
+  const storage = docker.ok
     ? await probeCommandAsync(
-        dockerExecutable,
-        ['volume', 'inspect', volumeName],
-        options.runProcessAsync,
+        runtime.dockerExecutable,
+        ['volume', 'inspect', runtime.storageVolumeName],
+        runtime.runProcessAsync,
       )
     : failedProbe('Docker daemon is unavailable.');
-  const base = createBaseChecks(docker, volume, volumeName);
+  const base = createBaseChecks(docker, storage, runtime.storageVolumeName);
   const dns = await Promise.all(options.domains.map(probeDnsAsync));
-  if (!docker.ok || !volume.ok) return [...base, ...dns];
+  if (!docker.ok || !storage.ok) return [...base, ...dns];
 
   return finishHttp01PreflightAsync({
-    ...options,
-    dockerExecutable,
-    image,
-    volumeName,
+    ...runtime,
     base,
     dns,
+    domains: options.domains,
   });
 }
 
-/*** Finish the image/webroot and HTTP roundtrip probes once Docker storage is available. */
+/*** Finish the storage/webroot and HTTP roundtrip probes once Docker is available. */
 async function finishHttp01PreflightAsync(input: {
   readonly base: readonly TlsPreflightCheck[];
   readonly dns: readonly TlsPreflightCheck[];
@@ -58,29 +59,31 @@ async function finishHttp01PreflightAsync(input: {
   readonly domains: readonly string[];
   readonly image: string;
   readonly runProcessAsync: RunProcessAsync;
-  readonly volumeName: string;
+  readonly storageVolumeName: string;
 }): Promise<readonly TlsPreflightCheck[]> {
   const token = `ankh-tls-${randomUUID().replaceAll('-', '')}`;
   const prepared = await writeChallengeAsync(input, token);
   const webroot = createCheck(
-    'webroot',
-    'Certbot image and HTTP-01 webroot',
+    'storage',
+    'Certificate storage and HTTP-01 webroot',
     prepared,
-    'Certbot image is runnable and the shared challenge webroot is writable.',
-    `Ensure ${input.volumeName} is writable and Docker can pull ${input.image}.`,
+    'Certificate storage is writable and the challenge webroot is ready.',
+    `Ensure Docker volume ${input.storageVolumeName} is writable and Docker can pull ${input.image}.`,
   );
   if (!prepared.ok) return [...input.base, webroot, ...input.dns];
 
-  const http = await Promise.all(input.domains.map((domain) => probeHttpAsync(domain, token)));
+  const http = await Promise.all(
+    input.domains.map((domain) => probeHttpAsync(domain, token)),
+  );
   await removeChallengeAsync(input, token);
   return [...input.base, webroot, ...input.dns, ...http];
 }
 
-/*** Build concise Docker and volume checklist entries. */
+/*** Build concise Docker and configured-storage checklist entries. */
 function createBaseChecks(
   docker: ProbeResult,
-  volume: ProbeResult,
-  volumeName: string,
+  storage: ProbeResult,
+  storageVolumeName: string,
 ): readonly TlsPreflightCheck[] {
   return [
     createCheck(
@@ -91,11 +94,11 @@ function createBaseChecks(
       'Start Docker and ensure the current user may access its socket.',
     ),
     createCheck(
-      'volume',
-      `Docker volume ${volumeName}`,
-      volume,
-      'Shared certificate volume exists.',
-      `Create it with: docker volume create ${volumeName}`,
+      'storage-volume',
+      `Docker storage volume ${storageVolumeName}`,
+      storage,
+      'Configured certificate storage volume exists.',
+      `Create it with: docker volume create ${storageVolumeName}`,
     ),
   ];
 }
@@ -132,12 +135,14 @@ async function probeHttpAsync(domain: string, token: string): Promise<TlsPreflig
     return {
       id: `http01:${domain}`,
       label: `HTTP-01 ${domain}:80`,
-      message: ok ? 'Challenge roundtrip succeeded.' : `Received HTTP ${response.status} instead of the challenge token.`,
+      message: ok
+        ? 'Challenge roundtrip succeeded.'
+        : `Received HTTP ${response.status} instead of the challenge token.`,
       status: ok ? 'pass' : 'fail',
       ...(ok
         ? {}
         : {
-            tip: 'Serve /.well-known/acme-challenge/* from the Certbot webroot on port 80 without redirecting that path.',
+            tip: 'Serve /.well-known/acme-challenge/* from the configured webroot on port 80 without redirecting that path.',
           }),
     };
   } catch (error) {
@@ -146,12 +151,12 @@ async function probeHttpAsync(domain: string, token: string): Promise<TlsPreflig
       label: `HTTP-01 ${domain}:80`,
       message: getErrorMessage(error),
       status: 'fail',
-      tip: 'Verify DNS points here, TCP/80 is open, and the web server exposes the challenge webroot.',
+      tip: 'Verify DNS points to the target server, TCP/80 is open, and the HTTP server exposes the configured challenge webroot.',
     };
   }
 }
 
-/*** Write one temporary HTTP-01 token through the persistent Docker volume. */
+/*** Write one temporary HTTP-01 token through the configured Docker storage volume. */
 async function writeChallengeAsync(
   input: DockerCommandInput,
   token: string,
@@ -165,7 +170,7 @@ async function writeChallengeAsync(
       '--entrypoint',
       'sh',
       '-v',
-      `${input.volumeName}:/data`,
+      `${input.storageVolumeName}:/data`,
       input.image,
       '-c',
       `mkdir -p ${CERTBOT_WEBROOT}/.well-known/acme-challenge && printf '%s' '${token}' > ${CERTBOT_WEBROOT}/.well-known/acme-challenge/${token}`,
@@ -185,7 +190,7 @@ async function removeChallengeAsync(
     '--entrypoint',
     'sh',
     '-v',
-    `${input.volumeName}:/data`,
+    `${input.storageVolumeName}:/data`,
     input.image,
     '-c',
     `rm -f ${CERTBOT_WEBROOT}/.well-known/acme-challenge/${token}`,
@@ -196,7 +201,7 @@ interface DockerCommandInput {
   readonly dockerExecutable: string;
   readonly image: string;
   readonly runProcessAsync: RunProcessAsync;
-  readonly volumeName: string;
+  readonly storageVolumeName: string;
 }
 
 interface ProbeResult {

@@ -1,9 +1,8 @@
 import {
   CERTBOT_CONFIG_DIR,
-  CERTBOT_DATA_ROOT,
   CERTBOT_IMAGE,
   CERTBOT_LOGS_DIR,
-  CERTBOT_VOLUME,
+  CERTBOT_STORAGE_VOLUME,
   CERTBOT_WEBROOT,
   CERTBOT_WORK_DIR,
 } from '../../../constants/certbot.js';
@@ -17,22 +16,30 @@ interface CreateDockerCertbotRuntimeOptions {
   readonly dockerExecutable?: string;
   readonly image?: string;
   readonly runProcessAsync?: RunProcessAsync;
-  readonly volumeName?: string;
+  readonly storageVolumeName?: string;
 }
 
 /*** Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness. */
 export function createDockerCertbotRuntime(
   options: CreateDockerCertbotRuntimeOptions = {},
 ): CertificateRuntimePort {
-  const dockerExecutable = options.dockerExecutable ?? 'docker';
-  const image = options.image ?? CERTBOT_IMAGE;
-  const runProcessAsync = options.runProcessAsync ?? defaultRunProcessAsync;
-  const volumeName = options.volumeName ?? CERTBOT_VOLUME;
-  const runtime = { dockerExecutable, image, runProcessAsync, volumeName };
+  const runtime: DockerRuntime = {
+    dockerExecutable: options.dockerExecutable ?? 'docker',
+    image: options.image ?? CERTBOT_IMAGE,
+    runProcessAsync: options.runProcessAsync ?? defaultRunProcessAsync,
+    storageVolumeName: options.storageVolumeName ?? CERTBOT_STORAGE_VOLUME,
+  };
 
   return {
     issueAsync: (input) => issueAsync(runtime, input),
-    preflightAsync: ({ domains }) => runDockerTlsPreflightAsync({ ...runtime, domains }),
+    preflightAsync: ({ domains }) =>
+      runDockerTlsPreflightAsync({
+        dockerExecutable: runtime.dockerExecutable,
+        domains,
+        image: runtime.image,
+        runProcessAsync: runtime.runProcessAsync,
+        storageVolumeName: runtime.storageVolumeName,
+      }),
     renewAsync: (input) => renewAsync(runtime, input.dryRun),
     statusAsync: () => statusAsync(runtime),
   };
@@ -42,7 +49,7 @@ interface DockerRuntime {
   readonly dockerExecutable: string;
   readonly image: string;
   readonly runProcessAsync: RunProcessAsync;
-  readonly volumeName: string;
+  readonly storageVolumeName: string;
 }
 
 /*** Issue one HTTP-01 certificate with persistent Certbot state. */
@@ -50,7 +57,7 @@ async function issueAsync(
   runtime: DockerRuntime,
   input: Parameters<CertificateRuntimePort['issueAsync']>[0],
 ): Promise<void> {
-  await ensureVolumeLayoutAsync(runtime);
+  await ensureStorageAsync(runtime);
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -77,7 +84,7 @@ async function issueAsync(
 
 /*** Ask Certbot to renew only certificates whose persisted policy says they are due. */
 async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void> {
-  await ensureVolumeLayoutAsync(runtime);
+  await ensureStorageAsync(runtime);
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -92,7 +99,7 @@ async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void
 
 /*** Read Certbot's persisted certificate inventory. */
 async function statusAsync(runtime: DockerRuntime): Promise<string> {
-  await ensureVolumeLayoutAsync(runtime);
+  await ensureStorageAsync(runtime);
   return (
     await runCheckedProcessAsync(
       runtime.dockerExecutable,
@@ -102,8 +109,8 @@ async function statusAsync(runtime: DockerRuntime): Promise<string> {
   ).stdout;
 }
 
-/*** Ensure all persistent Certbot directories exist in the shared volume. */
-async function ensureVolumeLayoutAsync(runtime: DockerRuntime): Promise<void> {
+/*** Ensure all persistent Certbot directories exist in the configured storage volume. */
+async function ensureStorageAsync(runtime: DockerRuntime): Promise<void> {
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -113,7 +120,7 @@ async function ensureVolumeLayoutAsync(runtime: DockerRuntime): Promise<void> {
       '--entrypoint',
       'sh',
       '-v',
-      `${runtime.volumeName}:/data`,
+      `${runtime.storageVolumeName}:/data`,
       runtime.image,
       '-c',
       `mkdir -p ${CERTBOT_WEBROOT} ${CERTBOT_CONFIG_DIR} ${CERTBOT_WORK_DIR} ${CERTBOT_LOGS_DIR}`,
@@ -124,7 +131,14 @@ async function ensureVolumeLayoutAsync(runtime: DockerRuntime): Promise<void> {
 
 /*** Build the Docker run prefix shared by Certbot lifecycle commands. */
 function dockerPrefix(runtime: DockerRuntime): readonly string[] {
-  return ['run', '--rm', '--pull=missing', '-v', `${runtime.volumeName}:/data`, runtime.image];
+  return [
+    'run',
+    '--rm',
+    '--pull=missing',
+    '-v',
+    `${runtime.storageVolumeName}:/data`,
+    runtime.image,
+  ];
 }
 
 /*** Build Certbot's persistent state-directory arguments. */
@@ -138,6 +152,3 @@ function stateDirectoryArguments(): readonly string[] {
     CERTBOT_LOGS_DIR,
   ];
 }
-
-// Keep this import-owned constant referenced so path ownership remains explicit in generated docs.
-void CERTBOT_DATA_ROOT;
