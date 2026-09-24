@@ -35,12 +35,16 @@ jobs:
         run: bun install
 
       - name: Keep workflow ownership outside the bootstrap commit
-        run: git restore --source=HEAD -- .github/workflows
+        run: |
+          rm -f .github/workflows/ci.yml
+          rm -f .github/workflows/release.yml
+          rm -f .github/workflows/renovate.yml
 
       - name: Apply canonical source formatting
         run: |
           bun run lint:fix
           bun run format
+          git restore --source=HEAD -- .github/workflows/bootstrap.yml
 
       - name: Build
         run: bun run build
