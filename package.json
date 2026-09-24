@@ -1,6 +1,6 @@
 {
   "name": "@ankhorage/tls",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Provider-agnostic TLS certificate lifecycle and automation.",
   "license": "MIT",
   "type": "module",
