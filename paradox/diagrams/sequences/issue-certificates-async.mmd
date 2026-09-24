@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant participant_dockerPrefix as dockerPrefix
+  participant participant_ensureStorageAsync as ensureStorageAsync
+  participant participant_issueAsync as issueAsync
+  participant participant_issueCertificatesAsync as issueCertificatesAsync
+  participant participant_runCheckedProcessAsync as runCheckedProcessAsync
+  participant participant_runProcessAsync as runProcessAsync
+  participant participant_stateDirectoryArguments as stateDirectoryArguments
+  participant_issueCertificatesAsync->>participant_issueAsync: runtime.issueAsync()
+  participant_issueAsync->>participant_issueAsync: issueAsync()
+  participant_issueAsync->>participant_ensureStorageAsync: ensureStorageAsync()
+  participant_ensureStorageAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync->>participant_runProcessAsync: runProcessAsync()
+  participant_runProcessAsync-->>participant_runCheckedProcessAsync: return
+  participant_runCheckedProcessAsync-->>participant_ensureStorageAsync: return
+  participant_ensureStorageAsync-->>participant_issueAsync: return
+  participant_issueAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync-->>participant_issueAsync: return
+  participant_issueAsync->>participant_dockerPrefix: dockerPrefix()
+  participant_dockerPrefix-->>participant_issueAsync: return
+  participant_issueAsync->>participant_stateDirectoryArguments: stateDirectoryArguments()
+  participant_stateDirectoryArguments-->>participant_issueAsync: return
+  participant_issueAsync-->>participant_issueAsync: return
+  participant_issueAsync-->>participant_issueCertificatesAsync: return

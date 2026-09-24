@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant participant_dockerPrefix as dockerPrefix
+  participant participant_ensureStorageAsync as ensureStorageAsync
+  participant participant_renewAsync as renewAsync
+  participant participant_renewCertificatesAsync as renewCertificatesAsync
+  participant participant_runCheckedProcessAsync as runCheckedProcessAsync
+  participant participant_runProcessAsync as runProcessAsync
+  participant participant_stateDirectoryArguments as stateDirectoryArguments
+  participant_renewCertificatesAsync->>participant_renewAsync: runtime.renewAsync()
+  participant_renewAsync->>participant_renewAsync: renewAsync()
+  participant_renewAsync->>participant_ensureStorageAsync: ensureStorageAsync()
+  participant_ensureStorageAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync->>participant_runProcessAsync: runProcessAsync()
+  participant_runProcessAsync-->>participant_runCheckedProcessAsync: return
+  participant_runCheckedProcessAsync-->>participant_ensureStorageAsync: return
+  participant_ensureStorageAsync-->>participant_renewAsync: return
+  participant_renewAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync-->>participant_renewAsync: return
+  participant_renewAsync->>participant_dockerPrefix: dockerPrefix()
+  participant_dockerPrefix-->>participant_renewAsync: return
+  participant_renewAsync->>participant_stateDirectoryArguments: stateDirectoryArguments()
+  participant_stateDirectoryArguments-->>participant_renewAsync: return
+  participant_renewAsync-->>participant_renewAsync: return
+  participant_renewAsync-->>participant_renewCertificatesAsync: return

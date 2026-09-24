@@ -1,0 +1,5 @@
+sequenceDiagram
+  participant participant_renderSystemdRenewalUnits as renderSystemdRenewalUnits
+  participant participant_validateStorageVolumeName as validateStorageVolumeName
+  participant_renderSystemdRenewalUnits->>participant_validateStorageVolumeName: validateStorageVolumeName()
+  participant_validateStorageVolumeName-->>participant_renderSystemdRenewalUnits: return

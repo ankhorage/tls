@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant participant_assertSystemdPlatform as assertSystemdPlatform
+  participant participant_disableAsync as disableAsync
+  participant participant_disableRenewalAutomationAsync as disableRenewalAutomationAsync
+  participant participant_join as join
+  participant participant_rm as rm
+  participant participant_runCheckedProcessAsync as runCheckedProcessAsync
+  participant participant_runProcessAsync as runProcessAsync
+  participant_disableRenewalAutomationAsync->>participant_disableAsync: scheduler.disableAsync()
+  participant_disableAsync->>participant_assertSystemdPlatform: assertSystemdPlatform()
+  participant_assertSystemdPlatform-->>participant_disableAsync: return
+  participant_disableAsync->>participant_runProcessAsync: runProcessAsync()
+  participant_runProcessAsync-->>participant_disableAsync: return
+  participant_disableAsync->>participant_rm: rm()
+  participant_rm-->>participant_disableAsync: return
+  participant_disableAsync->>participant_join: join()
+  participant_join-->>participant_disableAsync: return
+  participant_disableAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync->>participant_runProcessAsync: runProcessAsync()
+  participant_runProcessAsync-->>participant_runCheckedProcessAsync: return
+  participant_runCheckedProcessAsync-->>participant_disableAsync: return
+  participant_disableAsync-->>participant_disableRenewalAutomationAsync: return

@@ -1,0 +1,74 @@
+graph LR
+  module_src_cli_commands_automation_disable_ts["src/cli/commands/automation/disable.ts"]
+  module_src_cli_commands_automation_enable_ts["src/cli/commands/automation/enable.ts"]
+  module_src_cli_commands_automation_status_ts["src/cli/commands/automation/status.ts"]
+  module_src_cli_commands_issue_ts["src/cli/commands/issue.ts"]
+  module_src_cli_commands_renew_ts["src/cli/commands/renew.ts"]
+  module_src_cli_commands_status_ts["src/cli/commands/status.ts"]
+  module_src_cli_index_ts["src/cli/index.ts"]
+  module_src_features_automation_adapters_outbound_systemd_createSystemdRenewalScheduler_ts["src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"]
+  module_src_features_automation_adapters_outbound_systemd_renderSystemdRenewalUnits_test_ts["src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"]
+  module_src_features_automation_adapters_outbound_systemd_renderSystemdRenewalUnits_ts["src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"]
+  module_src_features_automation_application_ports_outbound_renewalSchedulerPort_ts["src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"]
+  module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts["src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"]
+  module_src_features_automation_application_use_cases_enableRenewalAutomationAsync_ts["src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"]
+  module_src_features_automation_application_use_cases_readRenewalAutomationStatusAsync_ts["src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"]
+  module_src_features_certificates_adapters_outbound_docker_createDockerCertbotRuntime_ts["src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"]
+  module_src_features_certificates_adapters_outbound_docker_runDockerTlsPreflightAsync_ts["src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"]
+  module_src_features_certificates_application_ports_outbound_certificateRuntimePort_ts["src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"]
+  module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_test_ts["src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"]
+  module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_ts["src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"]
+  module_src_features_certificates_application_use_cases_issueCertificatesAsync_test_ts["src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"]
+  module_src_features_certificates_application_use_cases_issueCertificatesAsync_ts["src/features/certificates/application/use-cases/issueCertificatesAsync.ts"]
+  module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts["src/features/certificates/application/use-cases/readCertificateStatusAsync.ts"]
+  module_src_features_certificates_application_use_cases_renewCertificatesAsync_ts["src/features/certificates/application/use-cases/renewCertificatesAsync.ts"]
+  module_src_features_certificates_constants_certbot_ts["src/features/certificates/constants/certbot.ts"]
+  module_src_features_certificates_domain_isHttp01Domain_ts["src/features/certificates/domain/isHttp01Domain.ts"]
+  module_src_index_ts["src/index.ts"]
+  module_src_types_preflight_ts["src/types/preflight.ts"]
+  module_src_types_process_ts["src/types/process.ts"]
+  module_src_utils_runCheckedProcessAsync_ts["src/utils/runCheckedProcessAsync.ts"]
+  module_src_utils_runProcessAsync_ts["src/utils/runProcessAsync.ts"]
+  export_CertificateRuntimePort["CertificateRuntimePort"]
+  module_src_features_certificates_application_ports_outbound_certificateRuntimePort_ts --> export_CertificateRuntimePort
+  export_CertificateRuntimePort -.-> export_TlsPreflightCheck
+  export_checkIssueReadinessAsync["checkIssueReadinessAsync"]
+  module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_ts --> export_checkIssueReadinessAsync
+  export_checkIssueReadinessAsync -.-> export_CertificateRuntimePort
+  export_checkIssueReadinessAsync -.-> export_TlsPreflightCheck
+  export_createDockerCertbotRuntime["createDockerCertbotRuntime"]
+  module_src_features_certificates_adapters_outbound_docker_createDockerCertbotRuntime_ts --> export_createDockerCertbotRuntime
+  export_createDockerCertbotRuntime -.-> export_CertificateRuntimePort
+  export_createSystemdRenewalScheduler["createSystemdRenewalScheduler"]
+  module_src_features_automation_adapters_outbound_systemd_createSystemdRenewalScheduler_ts --> export_createSystemdRenewalScheduler
+  export_createSystemdRenewalScheduler -.-> export_RenewalSchedulerPort
+  export_disableRenewalAutomationAsync["disableRenewalAutomationAsync"]
+  module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts --> export_disableRenewalAutomationAsync
+  export_disableRenewalAutomationAsync -.-> export_RenewalSchedulerPort
+  export_enableRenewalAutomationAsync["enableRenewalAutomationAsync"]
+  module_src_features_automation_application_use_cases_enableRenewalAutomationAsync_ts --> export_enableRenewalAutomationAsync
+  export_enableRenewalAutomationAsync -.-> export_RenewalSchedulerPort
+  export_issueCertificatesAsync["issueCertificatesAsync"]
+  module_src_features_certificates_application_use_cases_issueCertificatesAsync_ts --> export_issueCertificatesAsync
+  export_issueCertificatesAsync -.-> export_CertificateRuntimePort
+  export_provider["provider"]
+  module_src_cli_index_ts --> export_provider
+  export_readCertificateStatusAsync["readCertificateStatusAsync"]
+  module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts --> export_readCertificateStatusAsync
+  export_readCertificateStatusAsync -.-> export_CertificateRuntimePort
+  export_readRenewalAutomationStatusAsync["readRenewalAutomationStatusAsync"]
+  module_src_features_automation_application_use_cases_readRenewalAutomationStatusAsync_ts --> export_readRenewalAutomationStatusAsync
+  export_readRenewalAutomationStatusAsync -.-> export_RenewalAutomationStatus
+  export_readRenewalAutomationStatusAsync -.-> export_RenewalSchedulerPort
+  export_renderSystemdRenewalUnits["renderSystemdRenewalUnits"]
+  module_src_features_automation_adapters_outbound_systemd_renderSystemdRenewalUnits_ts --> export_renderSystemdRenewalUnits
+  export_RenewalAutomationStatus["RenewalAutomationStatus"]
+  module_src_features_automation_application_ports_outbound_renewalSchedulerPort_ts --> export_RenewalAutomationStatus
+  export_RenewalSchedulerPort["RenewalSchedulerPort"]
+  module_src_features_automation_application_ports_outbound_renewalSchedulerPort_ts --> export_RenewalSchedulerPort
+  export_RenewalSchedulerPort -.-> export_RenewalAutomationStatus
+  export_renewCertificatesAsync["renewCertificatesAsync"]
+  module_src_features_certificates_application_use_cases_renewCertificatesAsync_ts --> export_renewCertificatesAsync
+  export_renewCertificatesAsync -.-> export_CertificateRuntimePort
+  export_TlsPreflightCheck["TlsPreflightCheck"]
+  module_src_types_preflight_ts --> export_TlsPreflightCheck

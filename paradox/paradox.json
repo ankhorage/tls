@@ -1,0 +1,2647 @@
+{
+  "packageName": "@ankhorage/tls",
+  "packageId": "@ankhorage/tls",
+  "description": "Provider-agnostic TLS certificate lifecycle and automation.",
+  "collaborators": null,
+  "donation": null,
+  "badges": [
+    {
+      "id": "license",
+      "label": "license",
+      "value": "MIT",
+      "color": "2563eb"
+    },
+    {
+      "id": "npm",
+      "label": "npm",
+      "value": "v0.0.0",
+      "color": "cb3837"
+    },
+    {
+      "id": "runtime",
+      "label": "runtime",
+      "value": "bun",
+      "color": "f59e0b"
+    },
+    {
+      "id": "typescript",
+      "label": "typescript",
+      "value": "strict",
+      "color": "2563eb"
+    },
+    {
+      "id": "eslint",
+      "label": "eslint",
+      "value": "checked",
+      "color": "0a7f3f"
+    },
+    {
+      "id": "prettier",
+      "label": "prettier",
+      "value": "checked",
+      "color": "0a7f3f"
+    },
+    {
+      "id": "build",
+      "label": "build",
+      "value": "checked",
+      "color": "0a7f3f"
+    },
+    {
+      "id": "tests",
+      "label": "tests",
+      "value": "checked",
+      "color": "0a7f3f"
+    },
+    {
+      "id": "docs",
+      "label": "docs",
+      "value": "paradox",
+      "color": "0f766e"
+    }
+  ],
+  "usage": null,
+  "readmeUsageDescription": null,
+  "readmeUsage": [
+    {
+      "title": "Issue a certificate after HTTP-01 readiness succeeds",
+      "description": "Issue a certificate after HTTP-01 readiness succeeds\n\nThe certificate lifecycle stays provider-agnostic. This example composes the built-in Docker\nCertbot adapter, runs the same readiness checks used by `ankh tls issue`, and issues only when\nevery prerequisite passes.",
+      "language": "ts",
+      "code": "import {\n  checkIssueReadinessAsync,\n  createDockerCertbotRuntime,\n  issueCertificatesAsync,\n} from '@ankhorage/tls';\n\nconst runtime = createDockerCertbotRuntime({\n  storageVolumeName: 'tls-state',\n});\nconst domains = ['app.example.com'];\nconst checks = await checkIssueReadinessAsync(runtime, domains);\n\nif (checks.some(({ status }) => status === 'fail')) {\n  console.error(checks);\n  process.exitCode = 1;\n} else {\n  await issueCertificatesAsync(runtime, {\n    domains,\n    email: 'admin@example.com',\n  });\n}",
+      "sourcePath": "examples/basic-usage/index.ts"
+    }
+  ],
+  "readmeCli": null,
+  "readmeConfig": null,
+  "config": null,
+  "entrypoints": [
+    "src/cli/index.ts",
+    "src/index.ts"
+  ],
+  "modules": [
+    {
+      "path": "src/cli/commands/automation/disable.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      ],
+      "exports": [
+        "disable"
+      ]
+    },
+    {
+      "path": "src/cli/commands/automation/enable.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "src/features/certificates/constants/certbot.ts"
+      ],
+      "exports": [
+        "enable"
+      ]
+    },
+    {
+      "path": "src/cli/commands/automation/status.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+      ],
+      "exports": [
+        "status"
+      ]
+    },
+    {
+      "path": "src/cli/commands/issue.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "src/features/certificates/constants/certbot.ts",
+        "src/types/preflight.ts"
+      ],
+      "exports": [
+        "issue"
+      ]
+    },
+    {
+      "path": "src/cli/commands/renew.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "src/features/certificates/constants/certbot.ts"
+      ],
+      "exports": [
+        "renew"
+      ]
+    },
+    {
+      "path": "src/cli/commands/status.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "src/features/certificates/constants/certbot.ts"
+      ],
+      "exports": [
+        "status"
+      ]
+    },
+    {
+      "path": "src/cli/index.ts",
+      "isEntrypoint": true,
+      "dependencies": [
+        "src/cli/commands/automation/disable.ts",
+        "src/cli/commands/automation/enable.ts",
+        "src/cli/commands/automation/status.ts",
+        "src/cli/commands/issue.ts",
+        "src/cli/commands/renew.ts",
+        "src/cli/commands/status.ts"
+      ],
+      "exports": [
+        "default"
+      ]
+    },
+    {
+      "path": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "src/types/process.ts",
+        "src/utils/runCheckedProcessAsync.ts",
+        "src/utils/runProcessAsync.ts"
+      ],
+      "exports": [
+        "createSystemdRenewalScheduler"
+      ]
+    },
+    {
+      "path": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"
+      ],
+      "exports": []
+    },
+    {
+      "path": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "renderSystemdRenewalUnits"
+      ]
+    },
+    {
+      "path": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "RenewalAutomationStatus",
+        "RenewalSchedulerPort"
+      ]
+    },
+    {
+      "path": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      ],
+      "exports": [
+        "disableRenewalAutomationAsync"
+      ]
+    },
+    {
+      "path": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      ],
+      "exports": [
+        "enableRenewalAutomationAsync"
+      ]
+    },
+    {
+      "path": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      ],
+      "exports": [
+        "readRenewalAutomationStatusAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/constants/certbot.ts",
+        "src/types/process.ts",
+        "src/utils/runCheckedProcessAsync.ts",
+        "src/utils/runProcessAsync.ts"
+      ],
+      "exports": [
+        "createDockerCertbotRuntime"
+      ]
+    },
+    {
+      "path": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/constants/certbot.ts",
+        "src/types/preflight.ts",
+        "src/types/process.ts"
+      ],
+      "exports": [
+        "runDockerTlsPreflightAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/types/preflight.ts"
+      ],
+      "exports": [
+        "CertificateRuntimePort"
+      ]
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      ],
+      "exports": []
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/domain/isHttp01Domain.ts",
+        "src/types/preflight.ts"
+      ],
+      "exports": [
+        "checkIssueReadinessAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      ],
+      "exports": []
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/domain/isHttp01Domain.ts"
+      ],
+      "exports": [
+        "issueCertificatesAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      ],
+      "exports": [
+        "readCertificateStatusAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      ],
+      "exports": [
+        "renewCertificatesAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/constants/certbot.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "CERTBOT_CONFIG_DIR",
+        "CERTBOT_IMAGE",
+        "CERTBOT_LOGS_DIR",
+        "CERTBOT_STORAGE_VOLUME",
+        "CERTBOT_WEBROOT",
+        "CERTBOT_WORK_DIR"
+      ]
+    },
+    {
+      "path": "src/features/certificates/domain/isHttp01Domain.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "isHttp01Domain"
+      ]
+    },
+    {
+      "path": "src/index.ts",
+      "isEntrypoint": true,
+      "dependencies": [],
+      "exports": [
+        "CertificateRuntimePort",
+        "checkIssueReadinessAsync",
+        "createDockerCertbotRuntime",
+        "createSystemdRenewalScheduler",
+        "disableRenewalAutomationAsync",
+        "enableRenewalAutomationAsync",
+        "issueCertificatesAsync",
+        "readCertificateStatusAsync",
+        "readRenewalAutomationStatusAsync",
+        "renderSystemdRenewalUnits",
+        "RenewalAutomationStatus",
+        "RenewalSchedulerPort",
+        "renewCertificatesAsync",
+        "TlsPreflightCheck"
+      ]
+    },
+    {
+      "path": "src/types/preflight.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "TlsPreflightCheck"
+      ]
+    },
+    {
+      "path": "src/types/process.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "ProcessResult",
+        "RunProcessAsync"
+      ]
+    },
+    {
+      "path": "src/utils/runCheckedProcessAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/types/process.ts"
+      ],
+      "exports": [
+        "runCheckedProcessAsync"
+      ]
+    },
+    {
+      "path": "src/utils/runProcessAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/types/process.ts"
+      ],
+      "exports": [
+        "runProcessAsync"
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "name": "CertificateRuntimePort",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "line": 3,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "TlsPreflightCheck"
+      ],
+      "signatures": [],
+      "members": [
+        {
+          "name": "issueAsync",
+          "kind": "method",
+          "type": "(input: { readonly domain: string; readonly email: string; readonly forceRenewal: boolean; readonly staging: boolean; }) => Promise<void>",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "preflightAsync",
+          "kind": "method",
+          "type": "(input: { readonly domains: readonly string[]; }) => Promise<readonly TlsPreflightCheck[]>",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "renewAsync",
+          "kind": "method",
+          "type": "(input: { readonly dryRun: boolean; }) => Promise<void>",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "statusAsync",
+          "kind": "method",
+          "type": "() => Promise<string>",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "checkIssueReadinessAsync",
+      "description": "Validate requested hostnames and inspect HTTP-01 runtime readiness before certificate issuance.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "line": 6,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort",
+        "TlsPreflightCheck"
+      ],
+      "signatures": [
+        {
+          "label": "(runtime: CertificateRuntimePort, domains: readonly string[]) => Promise<readonly TlsPreflightCheck[]>",
+          "parameters": [
+            {
+              "name": "domains",
+              "type": "readonly string[]",
+              "required": true,
+              "description": null
+            },
+            {
+              "name": "runtime",
+              "type": "CertificateRuntimePort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<readonly TlsPreflightCheck[]>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "createDockerCertbotRuntime",
+      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 23,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort"
+      ],
+      "signatures": [
+        {
+          "label": "(options?: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "CreateDockerCertbotRuntimeOptions",
+              "required": false,
+              "description": null
+            }
+          ],
+          "returnType": "CertificateRuntimePort",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "createSystemdRenewalScheduler",
+      "description": "Create the systemd adapter that owns TLS renewal service and timer units.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "line": 21,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalSchedulerPort"
+      ],
+      "signatures": [
+        {
+          "label": "(options: CreateSystemdRenewalSchedulerOptions) => RenewalSchedulerPort",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "CreateSystemdRenewalSchedulerOptions",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "RenewalSchedulerPort",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "disableRenewalAutomationAsync",
+      "description": "Disable periodic TLS renewal checks and remove scheduler-owned state.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalSchedulerPort"
+      ],
+      "signatures": [
+        {
+          "label": "(scheduler: RenewalSchedulerPort) => Promise<void>",
+          "parameters": [
+            {
+              "name": "scheduler",
+              "type": "RenewalSchedulerPort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "enableRenewalAutomationAsync",
+      "description": "Enable idempotent periodic TLS renewal checks through the configured scheduler.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalSchedulerPort"
+      ],
+      "signatures": [
+        {
+          "label": "(scheduler: RenewalSchedulerPort, storageVolumeName: string) => Promise<void>",
+          "parameters": [
+            {
+              "name": "scheduler",
+              "type": "RenewalSchedulerPort",
+              "required": true,
+              "description": null
+            },
+            {
+              "name": "storageVolumeName",
+              "type": "string",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "issueCertificatesAsync",
+      "description": "Issue one independently renewable certificate for every unique validated domain.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "line": 5,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort"
+      ],
+      "signatures": [
+        {
+          "label": "(runtime: CertificateRuntimePort, input: { readonly domains: readonly string[]; readonly email: string; readonly forceRenewal?: boolean; readonly staging?: boolean; }) => Promise<void>",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "{ readonly domains: readonly string[]; readonly email: string; readonly forceRenewal?: boolean; readonly staging?: boolean; }",
+              "required": true,
+              "description": null
+            },
+            {
+              "name": "runtime",
+              "type": "CertificateRuntimePort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "provider",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "value",
+      "modulePath": "src/cli/index.ts",
+      "sourceLocation": {
+        "filePath": "src/cli/index.ts",
+        "line": 59,
+        "column": 7
+      },
+      "exportPaths": [
+        "src/cli/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "readCertificateStatusAsync",
+      "description": "Read the certificate inventory without changing persisted state.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort"
+      ],
+      "signatures": [
+        {
+          "label": "(runtime: CertificateRuntimePort) => Promise<string>",
+          "parameters": [
+            {
+              "name": "runtime",
+              "type": "CertificateRuntimePort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<string>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "readRenewalAutomationStatusAsync",
+      "description": "Read scheduler state without mutating renewal automation.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "line": 7,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalAutomationStatus",
+        "RenewalSchedulerPort"
+      ],
+      "signatures": [
+        {
+          "label": "(scheduler: RenewalSchedulerPort) => Promise<RenewalAutomationStatus>",
+          "parameters": [
+            {
+              "name": "scheduler",
+              "type": "RenewalSchedulerPort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<RenewalAutomationStatus>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "renderSystemdRenewalUnits",
+      "description": "Render deterministic systemd service and timer units for daily TLS renewal checks.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "line": 7,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [
+        {
+          "label": "(input: RenderSystemdRenewalUnitsInput) => { readonly service: string; readonly timer: string; }",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "RenderSystemdRenewalUnitsInput",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "{ readonly service: string; readonly timer: string; }",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "RenewalAutomationStatus",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "line": 1,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [
+        {
+          "name": "active",
+          "kind": "property",
+          "type": "boolean",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "detail",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "enabled",
+          "kind": "property",
+          "type": "boolean",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "RenewalSchedulerPort",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "line": 7,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalAutomationStatus"
+      ],
+      "signatures": [],
+      "members": [
+        {
+          "name": "disableAsync",
+          "kind": "method",
+          "type": "() => Promise<void>",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "enableAsync",
+          "kind": "method",
+          "type": "(input: { readonly storageVolumeName: string; }) => Promise<void>",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "statusAsync",
+          "kind": "method",
+          "type": "() => Promise<RenewalAutomationStatus>",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "renewCertificatesAsync",
+      "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort"
+      ],
+      "signatures": [
+        {
+          "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<void>",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "{ readonly dryRun?: boolean; }",
+              "required": false,
+              "description": null
+            },
+            {
+              "name": "runtime",
+              "type": "CertificateRuntimePort",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "TlsPreflightCheck",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/types/preflight.ts",
+      "sourceLocation": {
+        "filePath": "src/types/preflight.ts",
+        "line": 1,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [
+        {
+          "name": "id",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "label",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "message",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "status",
+          "kind": "property",
+          "type": "\"pass\" | \"fail\"",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "tip",
+          "kind": "property",
+          "type": "string | undefined",
+          "required": false,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    }
+  ],
+  "components": [],
+  "sourceFunctions": [
+    {
+      "name": "disable",
+      "description": "Disable TLS renewal scheduling and remove systemd-owned unit files.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/automation/disable.ts",
+        "line": 7,
+        "column": 14
+      }
+    },
+    {
+      "name": "enable",
+      "description": "Enable daily persistent TLS renewal checks with the systemd scheduler adapter.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/automation/enable.ts",
+        "line": 8,
+        "column": 14
+      }
+    },
+    {
+      "name": "parseStorageVolume",
+      "description": "Parse the optional certificate-storage override.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/automation/enable.ts",
+        "line": 32,
+        "column": 1
+      }
+    },
+    {
+      "name": "status",
+      "description": "Show whether the configured TLS renewal scheduler is installed and active.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/automation/status.ts",
+        "line": 7,
+        "column": 14
+      }
+    },
+    {
+      "name": "issue",
+      "description": "Run readiness checks and issue certificates only when every prerequisite passes.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/issue.ts",
+        "line": 10,
+        "column": 14
+      }
+    },
+    {
+      "name": "parseIssueArguments",
+      "description": "Parse issue arguments while preserving domain order.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/issue.ts",
+        "line": 54,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTokens",
+      "description": "Recursively consume issue tokens without mutable parser state.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/issue.ts",
+        "line": 72,
+        "column": 1
+      }
+    },
+    {
+      "name": "renderChecks",
+      "description": "Render the issue prerequisite checklist with actionable failure tips.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/issue.ts",
+        "line": 102,
+        "column": 1
+      }
+    },
+    {
+      "name": "getErrorMessage",
+      "description": "Convert an unknown failure to stable CLI text.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/issue.ts",
+        "line": 115,
+        "column": 1
+      }
+    },
+    {
+      "name": "renew",
+      "description": "Renew all due certificates from persistent Certbot state.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/renew.ts",
+        "line": 8,
+        "column": 14
+      }
+    },
+    {
+      "name": "parseArguments",
+      "description": "Parse renewal flags without mutable parser state.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/renew.ts",
+        "line": 33,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTokens",
+      "description": "Recursively consume renewal tokens.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/renew.ts",
+        "line": 41,
+        "column": 1
+      }
+    },
+    {
+      "name": "status",
+      "description": "Show certificates known to the persistent certificate runtime.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/status.ts",
+        "line": 8,
+        "column": 14
+      }
+    },
+    {
+      "name": "parseStorageVolume",
+      "description": "Parse the optional Docker-backed storage override.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/status.ts",
+        "line": 23,
+        "column": 1
+      }
+    },
+    {
+      "name": "readPackageVersion",
+      "description": "Read the installed TLS package version for the Ankh provider manifest.",
+      "sourceLocation": {
+        "filePath": "src/cli/index.ts",
+        "line": 78,
+        "column": 1
+      }
+    },
+    {
+      "name": "createSystemdRenewalScheduler",
+      "description": "Create the systemd adapter that owns TLS renewal service and timer units.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "line": 21,
+        "column": 1
+      }
+    },
+    {
+      "name": "readProcessMessage",
+      "description": "Read one concise process status message.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "line": 72,
+        "column": 1
+      }
+    },
+    {
+      "name": "assertSystemdPlatform",
+      "description": "Reject systemd scheduling on non-Linux hosts with an actionable error.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "line": 77,
+        "column": 1
+      }
+    },
+    {
+      "name": "renderSystemdRenewalUnits",
+      "description": "Render deterministic systemd service and timer units for daily TLS renewal checks.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "line": 7,
+        "column": 1
+      }
+    },
+    {
+      "name": "validateStorageVolumeName",
+      "description": "Reject storage names that cannot safely cross CLI, Docker, and systemd boundaries.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "line": 53,
+        "column": 1
+      }
+    },
+    {
+      "name": "escapeExecArgument",
+      "description": "Escape one systemd ExecStart argument while neutralizing specifier expansion.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "line": 62,
+        "column": 1
+      }
+    },
+    {
+      "name": "disableRenewalAutomationAsync",
+      "description": "Disable periodic TLS renewal checks and remove scheduler-owned state.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "enableRenewalAutomationAsync",
+      "description": "Enable idempotent periodic TLS renewal checks through the configured scheduler.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "readRenewalAutomationStatusAsync",
+      "description": "Read scheduler state without mutating renewal automation.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "line": 7,
+        "column": 1
+      }
+    },
+    {
+      "name": "createDockerCertbotRuntime",
+      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 23,
+        "column": 1
+      }
+    },
+    {
+      "name": "issueAsync",
+      "description": "Issue one HTTP-01 certificate with persistent Certbot state.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 56,
+        "column": 1
+      }
+    },
+    {
+      "name": "renewAsync",
+      "description": "Ask Certbot to renew only certificates whose persisted policy says they are due.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 86,
+        "column": 1
+      }
+    },
+    {
+      "name": "statusAsync",
+      "description": "Read Certbot's persisted certificate inventory.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 101,
+        "column": 1
+      }
+    },
+    {
+      "name": "ensureStorageAsync",
+      "description": "Ensure all persistent Certbot directories exist in the configured storage volume.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 113,
+        "column": 1
+      }
+    },
+    {
+      "name": "dockerPrefix",
+      "description": "Build the Docker run prefix shared by Certbot lifecycle commands.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 133,
+        "column": 1
+      }
+    },
+    {
+      "name": "stateDirectoryArguments",
+      "description": "Build Certbot's persistent state-directory arguments.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 145,
+        "column": 1
+      }
+    },
+    {
+      "name": "runDockerTlsPreflightAsync",
+      "description": "Probe Docker, configured storage, DNS, port 80 routing, and the live HTTP-01 webroot.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 21,
+        "column": 1
+      }
+    },
+    {
+      "name": "finishHttp01PreflightAsync",
+      "description": "Finish the storage/webroot and HTTP roundtrip probes once Docker is available.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 55,
+        "column": 1
+      }
+    },
+    {
+      "name": "createBaseChecks",
+      "description": "Build concise Docker and configured-storage checklist entries.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 81,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeDnsAsync",
+      "description": "Resolve one hostname to prove public DNS exists before attempting ACME validation.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 105,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeHttpAsync",
+      "description": "Fetch the exact token over HTTP to verify DNS, TCP/80, routing, and webroot ownership.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 126,
+        "column": 1
+      }
+    },
+    {
+      "name": "writeChallengeAsync",
+      "description": "Write one temporary HTTP-01 token through the configured Docker storage volume.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 158,
+        "column": 1
+      }
+    },
+    {
+      "name": "removeChallengeAsync",
+      "description": "Remove the temporary readiness token after the HTTP roundtrip.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 178,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeCommandAsync",
+      "description": "Probe a process command without throwing so readiness can report every actionable failure.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 205,
+        "column": 1
+      }
+    },
+    {
+      "name": "failedProbe",
+      "description": "Build a failed probe value.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 222,
+        "column": 1
+      }
+    },
+    {
+      "name": "createCheck",
+      "description": "Convert one probe into a concise checklist entry.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 227,
+        "column": 1
+      }
+    },
+    {
+      "name": "getErrorMessage",
+      "description": "Convert an unknown error to a stable readiness message.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "line": 244,
+        "column": 1
+      }
+    },
+    {
+      "name": "createRuntime",
+      "description": "Create a deterministic fake certificate runtime for readiness tests.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "line": 25,
+        "column": 1
+      }
+    },
+    {
+      "name": "checkIssueReadinessAsync",
+      "description": "Validate requested hostnames and inspect HTTP-01 runtime readiness before certificate issuance.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "line": 6,
+        "column": 1
+      }
+    },
+    {
+      "name": "missingDomainsCheck",
+      "description": "Build the actionable result used when no certificate hostname was supplied.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "line": 20,
+        "column": 1
+      }
+    },
+    {
+      "name": "createDomainSyntaxCheck",
+      "description": "Build a deterministic hostname-syntax result before network or Docker work.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "line": 31,
+        "column": 1
+      }
+    },
+    {
+      "name": "createRuntime",
+      "description": "Create a deterministic fake runtime for issue orchestration tests.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "line": 22,
+        "column": 1
+      }
+    },
+    {
+      "name": "issueCertificatesAsync",
+      "description": "Issue one independently renewable certificate for every unique validated domain.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "line": 5,
+        "column": 1
+      }
+    },
+    {
+      "name": "readCertificateStatusAsync",
+      "description": "Read the certificate inventory without changing persisted state.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "renewCertificatesAsync",
+      "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "isHttp01Domain",
+      "description": "Validate an ordinary DNS hostname suitable for ACME HTTP-01 validation.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/domain/isHttp01Domain.ts",
+        "line": 2,
+        "column": 1
+      }
+    },
+    {
+      "name": "runCheckedProcessAsync",
+      "description": "Run one process and throw captured diagnostics on failure.",
+      "sourceLocation": {
+        "filePath": "src/utils/runCheckedProcessAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "runProcessAsync",
+      "description": "Execute a process while capturing deterministic stdout and stderr.",
+      "sourceLocation": {
+        "filePath": "src/utils/runProcessAsync.ts",
+        "line": 6,
+        "column": 1
+      }
+    }
+  ],
+  "sequenceScenarios": [
+    {
+      "kind": "export",
+      "name": "checkIssueReadinessAsync",
+      "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+      "symbolName": "checkIssueReadinessAsync",
+      "description": "Validate requested hostnames and inspect HTTP-01 runtime readiness before certificate issuance.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "createDockerCertbotRuntime",
+      "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+      "symbolName": "createDockerCertbotRuntime",
+      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "createSystemdRenewalScheduler",
+      "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+      "symbolName": "createSystemdRenewalScheduler",
+      "description": "Create the systemd adapter that owns TLS renewal service and timer units.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "disableRenewalAutomationAsync",
+      "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+      "symbolName": "disableRenewalAutomationAsync",
+      "description": "Disable periodic TLS renewal checks and remove scheduler-owned state.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "enableRenewalAutomationAsync",
+      "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+      "symbolName": "enableRenewalAutomationAsync",
+      "description": "Enable idempotent periodic TLS renewal checks through the configured scheduler.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "issueCertificatesAsync",
+      "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+      "symbolName": "issueCertificatesAsync",
+      "description": "Issue one independently renewable certificate for every unique validated domain.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "readCertificateStatusAsync",
+      "sourcePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+      "symbolName": "readCertificateStatusAsync",
+      "description": "Read the certificate inventory without changing persisted state.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "readRenewalAutomationStatusAsync",
+      "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+      "symbolName": "readRenewalAutomationStatusAsync",
+      "description": "Read scheduler state without mutating renewal automation.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "renderSystemdRenewalUnits",
+      "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+      "symbolName": "renderSystemdRenewalUnits",
+      "description": "Render deterministic systemd service and timer units for daily TLS renewal checks.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "renewCertificatesAsync",
+      "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+      "symbolName": "renewCertificatesAsync",
+      "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
+      "isReadme": false
+    }
+  ],
+  "graphs": {
+    "imports": [
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/automation/disable.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/automation/enable.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/automation/status.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/issue.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/renew.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/cli/commands/status.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/utils/runCheckedProcessAsync.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/utils/runCheckedProcessAsync.ts"
+      },
+      {
+        "fromPath": "src/utils/runProcessAsync.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/status.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/status.ts",
+        "toPath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/status.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/disable.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "sourcePath": "src/cli/commands/automation/disable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/disable.ts",
+        "toPath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "sourcePath": "src/cli/commands/automation/disable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/enable.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/enable.ts",
+        "toPath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/enable.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/status.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/status.ts",
+        "toPath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromPath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromPath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromPath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "toPath": "src/features/certificates/domain/isHttp01Domain.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "toPath": "src/features/certificates/domain/isHttp01Domain.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "toPath": "src/utils/runCheckedProcessAsync.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "toPath": "src/utils/runProcessAsync.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/utils/runCheckedProcessAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/utils/runProcessAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      }
+    ],
+    "calls": [
+      {
+        "fromSymbol": "src/cli/index.ts",
+        "toSymbol": "readPackageVersion",
+        "callExpression": "readPackageVersion",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromSymbol": "readPackageVersion",
+        "toSymbol": "readFileSync",
+        "callExpression": "readFileSync",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromSymbol": "readPackageVersion",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromSymbol": "readPackageVersion",
+        "toSymbol": "dirname",
+        "callExpression": "dirname",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromSymbol": "readPackageVersion",
+        "toSymbol": "fileURLToPath",
+        "callExpression": "fileURLToPath",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromSymbol": "runCheckedProcessAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "runProcessAsync",
+        "sourcePath": "src/utils/runCheckedProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "src/utils/runProcessAsync.ts",
+        "toSymbol": "spawn",
+        "callExpression": "spawn",
+        "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "src/utils/runProcessAsync.ts",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "parseIssueArguments",
+        "callExpression": "parseIssueArguments",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "createDockerCertbotRuntime",
+        "callExpression": "createDockerCertbotRuntime",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "checkIssueReadinessAsync",
+        "callExpression": "checkIssueReadinessAsync",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "renderChecks",
+        "callExpression": "renderChecks",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "issueCertificatesAsync",
+        "callExpression": "issueCertificatesAsync",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "parseIssueArguments",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "renew",
+        "toSymbol": "parseArguments",
+        "callExpression": "parseArguments",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "renew",
+        "toSymbol": "createDockerCertbotRuntime",
+        "callExpression": "createDockerCertbotRuntime",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "renew",
+        "toSymbol": "renewCertificatesAsync",
+        "callExpression": "renewCertificatesAsync",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "parseArguments",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "status",
+        "toSymbol": "parseStorageVolume",
+        "callExpression": "parseStorageVolume",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromSymbol": "status",
+        "toSymbol": "createDockerCertbotRuntime",
+        "callExpression": "createDockerCertbotRuntime",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromSymbol": "status",
+        "toSymbol": "readCertificateStatusAsync",
+        "callExpression": "readCertificateStatusAsync",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromSymbol": "disable",
+        "toSymbol": "createSystemdRenewalScheduler",
+        "callExpression": "createSystemdRenewalScheduler",
+        "sourcePath": "src/cli/commands/automation/disable.ts"
+      },
+      {
+        "fromSymbol": "disable",
+        "toSymbol": "disableRenewalAutomationAsync",
+        "callExpression": "disableRenewalAutomationAsync",
+        "sourcePath": "src/cli/commands/automation/disable.ts"
+      },
+      {
+        "fromSymbol": "enable",
+        "toSymbol": "parseStorageVolume",
+        "callExpression": "parseStorageVolume",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromSymbol": "enable",
+        "toSymbol": "createSystemdRenewalScheduler",
+        "callExpression": "createSystemdRenewalScheduler",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromSymbol": "enable",
+        "toSymbol": "enableRenewalAutomationAsync",
+        "callExpression": "enableRenewalAutomationAsync",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromSymbol": "status",
+        "toSymbol": "createSystemdRenewalScheduler",
+        "callExpression": "createSystemdRenewalScheduler",
+        "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromSymbol": "status",
+        "toSymbol": "readRenewalAutomationStatusAsync",
+        "callExpression": "readRenewalAutomationStatusAsync",
+        "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromSymbol": "disableRenewalAutomationAsync",
+        "toSymbol": "disableAsync",
+        "callExpression": "scheduler.disableAsync",
+        "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromSymbol": "enableRenewalAutomationAsync",
+        "toSymbol": "enableAsync",
+        "callExpression": "scheduler.enableAsync",
+        "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromSymbol": "readRenewalAutomationStatusAsync",
+        "toSymbol": "statusAsync",
+        "callExpression": "scheduler.statusAsync",
+        "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toSymbol": "describe",
+        "callExpression": "describe",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toSymbol": "test",
+        "callExpression": "test",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toSymbol": "createRuntime",
+        "callExpression": "createRuntime",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toSymbol": "checkIssueReadinessAsync",
+        "callExpression": "checkIssueReadinessAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts",
+        "toSymbol": "expect",
+        "callExpression": "expect",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "onPreflight",
+        "callExpression": "onPreflight",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"
+      },
+      {
+        "fromSymbol": "checkIssueReadinessAsync",
+        "toSymbol": "missingDomainsCheck",
+        "callExpression": "missingDomainsCheck",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromSymbol": "checkIssueReadinessAsync",
+        "toSymbol": "preflightAsync",
+        "callExpression": "runtime.preflightAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromSymbol": "createDomainSyntaxCheck",
+        "toSymbol": "isHttp01Domain",
+        "callExpression": "isHttp01Domain",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toSymbol": "describe",
+        "callExpression": "describe",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toSymbol": "test",
+        "callExpression": "test",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toSymbol": "createRuntime",
+        "callExpression": "createRuntime",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toSymbol": "issueCertificatesAsync",
+        "callExpression": "issueCertificatesAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts",
+        "toSymbol": "expect",
+        "callExpression": "expect",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+        "toSymbol": "isHttp01Domain",
+        "callExpression": "isHttp01Domain",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "issueCertificatesAsync",
+        "toSymbol": "issueAsync",
+        "callExpression": "runtime.issueAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "readCertificateStatusAsync",
+        "toSymbol": "statusAsync",
+        "callExpression": "runtime.statusAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts"
+      },
+      {
+        "fromSymbol": "renewCertificatesAsync",
+        "toSymbol": "renewAsync",
+        "callExpression": "runtime.renewAsync",
+        "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "assertSystemdPlatform",
+        "callExpression": "assertSystemdPlatform",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "renderSystemdRenewalUnits",
+        "callExpression": "renderSystemdRenewalUnits",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "mkdir",
+        "callExpression": "mkdir",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "writeFile",
+        "callExpression": "writeFile",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "enableAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "disableAsync",
+        "toSymbol": "assertSystemdPlatform",
+        "callExpression": "assertSystemdPlatform",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "disableAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "runProcessAsync",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "disableAsync",
+        "toSymbol": "rm",
+        "callExpression": "rm",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "disableAsync",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "disableAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "assertSystemdPlatform",
+        "callExpression": "assertSystemdPlatform",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "runProcessAsync",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "readProcessMessage",
+        "callExpression": "readProcessMessage",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+        "toSymbol": "describe",
+        "callExpression": "describe",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+        "toSymbol": "test",
+        "callExpression": "test",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+        "toSymbol": "renderSystemdRenewalUnits",
+        "callExpression": "renderSystemdRenewalUnits",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts",
+        "toSymbol": "expect",
+        "callExpression": "expect",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
+      },
+      {
+        "fromSymbol": "renderSystemdRenewalUnits",
+        "toSymbol": "validateStorageVolumeName",
+        "callExpression": "validateStorageVolumeName",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "issueAsync",
+        "callExpression": "issueAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "runDockerTlsPreflightAsync",
+        "callExpression": "runDockerTlsPreflightAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "renewAsync",
+        "callExpression": "renewAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "statusAsync",
+        "callExpression": "statusAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "ensureStorageAsync",
+        "callExpression": "ensureStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "dockerPrefix",
+        "callExpression": "dockerPrefix",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "ensureStorageAsync",
+        "callExpression": "ensureStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "dockerPrefix",
+        "callExpression": "dockerPrefix",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "ensureStorageAsync",
+        "callExpression": "ensureStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "dockerPrefix",
+        "callExpression": "dockerPrefix",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "ensureStorageAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "runDockerTlsPreflightAsync",
+        "toSymbol": "probeCommandAsync",
+        "callExpression": "probeCommandAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runDockerTlsPreflightAsync",
+        "toSymbol": "failedProbe",
+        "callExpression": "failedProbe",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runDockerTlsPreflightAsync",
+        "toSymbol": "createBaseChecks",
+        "callExpression": "createBaseChecks",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runDockerTlsPreflightAsync",
+        "toSymbol": "finishHttp01PreflightAsync",
+        "callExpression": "finishHttp01PreflightAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "finishHttp01PreflightAsync",
+        "toSymbol": "randomUUID",
+        "callExpression": "randomUUID",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "finishHttp01PreflightAsync",
+        "toSymbol": "writeChallengeAsync",
+        "callExpression": "writeChallengeAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "finishHttp01PreflightAsync",
+        "toSymbol": "createCheck",
+        "callExpression": "createCheck",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "toSymbol": "probeHttpAsync",
+        "callExpression": "probeHttpAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "finishHttp01PreflightAsync",
+        "toSymbol": "removeChallengeAsync",
+        "callExpression": "removeChallengeAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "createBaseChecks",
+        "toSymbol": "createCheck",
+        "callExpression": "createCheck",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeDnsAsync",
+        "toSymbol": "lookup",
+        "callExpression": "lookup",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeDnsAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeHttpAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "writeChallengeAsync",
+        "toSymbol": "probeCommandAsync",
+        "callExpression": "probeCommandAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "removeChallengeAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "input.runProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeCommandAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "runProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeCommandAsync",
+        "toSymbol": "failedProbe",
+        "callExpression": "failedProbe",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeCommandAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+      }
+    ],
+    "typeReferences": [
+      {
+        "fromSymbol": "createSystemdRenewalScheduler",
+        "toType": "CreateSystemdRenewalSchedulerOptions",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "createSystemdRenewalScheduler",
+        "toType": "RenewalSchedulerPort",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "renderSystemdRenewalUnits",
+        "toType": "RenderSystemdRenewalUnitsInput",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"
+      },
+      {
+        "fromSymbol": "RenewalSchedulerPort",
+        "toType": "RenewalAutomationStatus",
+        "sourcePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      },
+      {
+        "fromSymbol": "disableRenewalAutomationAsync",
+        "toType": "RenewalSchedulerPort",
+        "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromSymbol": "enableRenewalAutomationAsync",
+        "toType": "RenewalSchedulerPort",
+        "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromSymbol": "readRenewalAutomationStatusAsync",
+        "toType": "RenewalAutomationStatus",
+        "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+      },
+      {
+        "fromSymbol": "readRenewalAutomationStatusAsync",
+        "toType": "RenewalSchedulerPort",
+        "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+      },
+      {
+        "fromSymbol": "createDockerCertbotRuntime",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "createDockerCertbotRuntime",
+        "toType": "CreateDockerCertbotRuntimeOptions",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "CertificateRuntimePort",
+        "toType": "TlsPreflightCheck",
+        "sourcePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      },
+      {
+        "fromSymbol": "checkIssueReadinessAsync",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromSymbol": "checkIssueReadinessAsync",
+        "toType": "TlsPreflightCheck",
+        "sourcePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"
+      },
+      {
+        "fromSymbol": "issueCertificatesAsync",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "readCertificateStatusAsync",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts"
+      },
+      {
+        "fromSymbol": "renewCertificatesAsync",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      }
+    ],
+    "componentComposition": []
+  }
+}

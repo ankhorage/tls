@@ -1,0 +1,599 @@
+[
+  {
+    "name": "CertificateRuntimePort",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+      "line": 3,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "TlsPreflightCheck"
+    ],
+    "signatures": [],
+    "members": [
+      {
+        "name": "issueAsync",
+        "kind": "method",
+        "type": "(input: { readonly domain: string; readonly email: string; readonly forceRenewal: boolean; readonly staging: boolean; }) => Promise<void>",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "preflightAsync",
+        "kind": "method",
+        "type": "(input: { readonly domains: readonly string[]; }) => Promise<readonly TlsPreflightCheck[]>",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "renewAsync",
+        "kind": "method",
+        "type": "(input: { readonly dryRun: boolean; }) => Promise<void>",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "statusAsync",
+        "kind": "method",
+        "type": "() => Promise<string>",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "checkIssueReadinessAsync",
+    "description": "Validate requested hostnames and inspect HTTP-01 runtime readiness before certificate issuance.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
+      "line": 6,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort",
+      "TlsPreflightCheck"
+    ],
+    "signatures": [
+      {
+        "label": "(runtime: CertificateRuntimePort, domains: readonly string[]) => Promise<readonly TlsPreflightCheck[]>",
+        "parameters": [
+          {
+            "name": "domains",
+            "type": "readonly string[]",
+            "required": true,
+            "description": null
+          },
+          {
+            "name": "runtime",
+            "type": "CertificateRuntimePort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<readonly TlsPreflightCheck[]>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "createDockerCertbotRuntime",
+    "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+      "line": 23,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort"
+    ],
+    "signatures": [
+      {
+        "label": "(options?: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "CreateDockerCertbotRuntimeOptions",
+            "required": false,
+            "description": null
+          }
+        ],
+        "returnType": "CertificateRuntimePort",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "createSystemdRenewalScheduler",
+    "description": "Create the systemd adapter that owns TLS renewal service and timer units.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+      "line": 21,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalSchedulerPort"
+    ],
+    "signatures": [
+      {
+        "label": "(options: CreateSystemdRenewalSchedulerOptions) => RenewalSchedulerPort",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "CreateSystemdRenewalSchedulerOptions",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "RenewalSchedulerPort",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "disableRenewalAutomationAsync",
+    "description": "Disable periodic TLS renewal checks and remove scheduler-owned state.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalSchedulerPort"
+    ],
+    "signatures": [
+      {
+        "label": "(scheduler: RenewalSchedulerPort) => Promise<void>",
+        "parameters": [
+          {
+            "name": "scheduler",
+            "type": "RenewalSchedulerPort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "enableRenewalAutomationAsync",
+    "description": "Enable idempotent periodic TLS renewal checks through the configured scheduler.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalSchedulerPort"
+    ],
+    "signatures": [
+      {
+        "label": "(scheduler: RenewalSchedulerPort, storageVolumeName: string) => Promise<void>",
+        "parameters": [
+          {
+            "name": "scheduler",
+            "type": "RenewalSchedulerPort",
+            "required": true,
+            "description": null
+          },
+          {
+            "name": "storageVolumeName",
+            "type": "string",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "issueCertificatesAsync",
+    "description": "Issue one independently renewable certificate for every unique validated domain.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
+      "line": 5,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort"
+    ],
+    "signatures": [
+      {
+        "label": "(runtime: CertificateRuntimePort, input: { readonly domains: readonly string[]; readonly email: string; readonly forceRenewal?: boolean; readonly staging?: boolean; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "{ readonly domains: readonly string[]; readonly email: string; readonly forceRenewal?: boolean; readonly staging?: boolean; }",
+            "required": true,
+            "description": null
+          },
+          {
+            "name": "runtime",
+            "type": "CertificateRuntimePort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "provider",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "value",
+    "modulePath": "src/cli/index.ts",
+    "sourceLocation": {
+      "filePath": "src/cli/index.ts",
+      "line": 59,
+      "column": 7
+    },
+    "exportPaths": [
+      "src/cli/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "readCertificateStatusAsync",
+    "description": "Read the certificate inventory without changing persisted state.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort"
+    ],
+    "signatures": [
+      {
+        "label": "(runtime: CertificateRuntimePort) => Promise<string>",
+        "parameters": [
+          {
+            "name": "runtime",
+            "type": "CertificateRuntimePort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<string>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "readRenewalAutomationStatusAsync",
+    "description": "Read scheduler state without mutating renewal automation.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+      "line": 7,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalAutomationStatus",
+      "RenewalSchedulerPort"
+    ],
+    "signatures": [
+      {
+        "label": "(scheduler: RenewalSchedulerPort) => Promise<RenewalAutomationStatus>",
+        "parameters": [
+          {
+            "name": "scheduler",
+            "type": "RenewalSchedulerPort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<RenewalAutomationStatus>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "renderSystemdRenewalUnits",
+    "description": "Render deterministic systemd service and timer units for daily TLS renewal checks.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+      "line": 7,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [
+      {
+        "label": "(input: RenderSystemdRenewalUnitsInput) => { readonly service: string; readonly timer: string; }",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "RenderSystemdRenewalUnitsInput",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "{ readonly service: string; readonly timer: string; }",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "RenewalAutomationStatus",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+      "line": 1,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [
+      {
+        "name": "active",
+        "kind": "property",
+        "type": "boolean",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "detail",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "enabled",
+        "kind": "property",
+        "type": "boolean",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "RenewalSchedulerPort",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+      "line": 7,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalAutomationStatus"
+    ],
+    "signatures": [],
+    "members": [
+      {
+        "name": "disableAsync",
+        "kind": "method",
+        "type": "() => Promise<void>",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "enableAsync",
+        "kind": "method",
+        "type": "(input: { readonly storageVolumeName: string; }) => Promise<void>",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "statusAsync",
+        "kind": "method",
+        "type": "() => Promise<RenewalAutomationStatus>",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "renewCertificatesAsync",
+    "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort"
+    ],
+    "signatures": [
+      {
+        "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "{ readonly dryRun?: boolean; }",
+            "required": false,
+            "description": null
+          },
+          {
+            "name": "runtime",
+            "type": "CertificateRuntimePort",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "TlsPreflightCheck",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/types/preflight.ts",
+    "sourceLocation": {
+      "filePath": "src/types/preflight.ts",
+      "line": 1,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [
+      {
+        "name": "id",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "label",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "message",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "status",
+        "kind": "property",
+        "type": "\"pass\" | \"fail\"",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "tip",
+        "kind": "property",
+        "type": "string | undefined",
+        "required": false,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  }
+]
