@@ -3,6 +3,10 @@ import type { CertificateRuntimePort } from '../features/certificates/applicatio
 export type CertificateRuntimeKind = 'docker' | 'native';
 export type CertificateRuntimePreference = 'auto' | CertificateRuntimeKind;
 
+export interface CertificateRenewalResult {
+  readonly renewed: boolean;
+}
+
 export interface CertificateStoragePaths {
   readonly configDirectory: string;
   readonly logsDirectory: string;
