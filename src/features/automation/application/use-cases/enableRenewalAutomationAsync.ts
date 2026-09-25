@@ -1,13 +1,17 @@
+import type { CertificateRuntimePreference } from '../../../../types/certificates.js';
 import type { RenewalSchedulerPort } from '../ports/outbound/renewalSchedulerPort.js';
 
 /*** Enable idempotent periodic TLS renewal checks through the configured scheduler. */
 export async function enableRenewalAutomationAsync(
   scheduler: RenewalSchedulerPort,
-  storageVolumeName: string,
+  input: {
+    readonly runtimePreference: CertificateRuntimePreference;
+    readonly storageDirectory: string;
+  },
 ): Promise<void> {
-  if (storageVolumeName.trim() === '') {
-    throw new Error('Certificate storage volume name must not be empty.');
+  if (input.storageDirectory.trim() === '') {
+    throw new Error('Certificate storage directory must not be empty.');
   }
 
-  await scheduler.enableAsync({ storageVolumeName });
+  await scheduler.enableAsync(input);
 }
