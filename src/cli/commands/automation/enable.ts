@@ -1,7 +1,7 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { enableRenewalAutomationAsync } from '../../../features/automation/application/use-cases/enableRenewalAutomationAsync.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { parseTlsRuntimeOptions } from '../../utils/parseTlsRuntimeOptions.js';
 
 /*** Enable daily persistent TLS renewal checks through the scheduler composition boundary. */
