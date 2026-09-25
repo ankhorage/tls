@@ -35,10 +35,10 @@ test('auto runtime falls back to Docker only when native Certbot is unavailable'
   expect(probes).toEqual(['certbot', 'docker']);
 });
 
-test('auto runtime reports an actionable failure when neither runtime exists', async () => {
+test('auto runtime reports an actionable failure when neither runtime exists', () => {
   const runProcessAsync = createProbe(() => 1);
 
-  expect(
+  return expect(
     createCertificateRuntimeAsync({
       runProcessAsync,
       storageDirectory: '/tmp/tls-missing',
