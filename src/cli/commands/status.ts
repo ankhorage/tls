@@ -9,9 +9,7 @@ export const status: AnkhCommandHandler = async (request) => {
   try {
     const parsed = parseTlsRuntimeOptions(request.argv);
     if (parsed.remaining.length !== 0) {
-      throw new Error(
-        'Usage: ankh tls status [--storage <path>] [--runtime auto|native|docker]',
-      );
+      throw new Error('Usage: ankh tls status [--storage <path>] [--runtime auto|native|docker]');
     }
     const resolved = await createCertificateRuntimeAsync({
       preference: parsed.runtimePreference,
