@@ -1,7 +1,7 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { readRenewalAutomationStatusAsync } from '../../../features/automation/application/use-cases/readRenewalAutomationStatusAsync.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 
 /*** Show whether the configured TLS renewal scheduler is installed and active. */
 export const status: AnkhCommandHandler = async (request) => {
