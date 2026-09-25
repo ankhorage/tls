@@ -25,7 +25,9 @@ export async function runHttp01PreflightAsync(
 
   const token = `ankh-tls-${randomUUID().replaceAll('-', '')}`;
   await writeChallengeAsync(input.storage, token);
-  const httpChecks = await Promise.all(input.domains.map((domain) => probeHttpAsync(domain, token)));
+  const httpChecks = await Promise.all(
+    input.domains.map((domain) => probeHttpAsync(domain, token)),
+  );
   await removeChallengeAsync(input.storage, token);
   return [...input.runtimeChecks, storageCheck, ...dnsChecks, ...httpChecks];
 }
@@ -105,10 +107,7 @@ async function probeHttpAsync(domain: string, token: string): Promise<TlsPreflig
 }
 
 /*** Write one temporary HTTP-01 token directly into host-owned storage. */
-async function writeChallengeAsync(
-  storage: CertificateStoragePaths,
-  token: string,
-): Promise<void> {
+async function writeChallengeAsync(storage: CertificateStoragePaths, token: string): Promise<void> {
   const directory = join(storage.webrootDirectory, '.well-known', 'acme-challenge');
   await mkdir(directory, { recursive: true });
   await writeFile(join(directory, token), token, 'utf8');
