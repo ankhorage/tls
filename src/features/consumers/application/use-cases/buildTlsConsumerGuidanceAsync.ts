@@ -86,10 +86,7 @@ function candidatePaths(consumer: TlsConsumer, cwd: string): readonly string[] {
 }
 
 /*** Render paths and consumer-specific suggestions without editing third-party configuration. */
-function renderGuidance(
-  input: BuildTlsConsumerGuidanceInput,
-  configPath: string | null,
-): string {
+function renderGuidance(input: BuildTlsConsumerGuidanceInput, configPath: string | null): string {
   const lines = [
     `TLS consumer: ${input.consumer}`,
     `storage: ${input.storage.rootDirectory}`,
