@@ -35,10 +35,7 @@ const commands = [
     path: ['renew'],
     capability: CAPABILITIES.renew,
     summary: 'Renew certificates that are due according to persisted ACME state.',
-    examples: [
-      'ankh tls renew --dry-run',
-      'ankh tls renew --deploy-command "nginx -s reload"',
-    ],
+    examples: ['ankh tls renew --dry-run', 'ankh tls renew --deploy-command "nginx -s reload"'],
   },
   {
     path: ['status'],
