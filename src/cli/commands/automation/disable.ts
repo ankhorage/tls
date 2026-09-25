@@ -13,7 +13,7 @@ export const disable: AnkhCommandHandler = async (request) => {
     if (entrypoint === undefined)
       throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
-    const scheduler = createSystemdRenewalScheduler({
+    const scheduler = createRenewalScheduler({
       ankhCommand: [process.execPath, entrypoint],
     });
     await disableRenewalAutomationAsync(scheduler);
