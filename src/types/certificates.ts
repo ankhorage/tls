@@ -1,3 +1,5 @@
+import type { CertificateRuntimePort } from '../features/certificates/application/ports/outbound/certificateRuntimePort.js';
+
 export type CertificateRuntimeKind = 'docker' | 'native';
 export type CertificateRuntimePreference = 'auto' | CertificateRuntimeKind;
 
@@ -11,6 +13,6 @@ export interface CertificateStoragePaths {
 
 export interface ResolvedCertificateRuntime {
   readonly kind: CertificateRuntimeKind;
-  readonly runtime: import('../features/certificates/application/ports/outbound/certificateRuntimePort.js').CertificateRuntimePort;
+  readonly runtime: CertificateRuntimePort;
   readonly storage: CertificateStoragePaths;
 }
