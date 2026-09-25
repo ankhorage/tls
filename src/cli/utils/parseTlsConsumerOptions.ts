@@ -34,9 +34,7 @@ function parseTokens(
     }
     return parseTokens(rest, {
       ...parsed,
-      ...(token === '--consumer'
-        ? { consumer: value as TlsConsumer }
-        : { configPath: value }),
+      ...(token === '--consumer' ? { consumer: value as TlsConsumer } : { configPath: value }),
     });
   }
 
