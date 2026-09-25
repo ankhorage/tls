@@ -36,9 +36,7 @@ export async function createCertificateRuntimeAsync(
 }
 
 /*** Normalize optional composition inputs once before runtime selection. */
-function createRuntimeContext(
-  options: CreateCertificateRuntimeOptions,
-): RuntimeCompositionContext {
+function createRuntimeContext(options: CreateCertificateRuntimeOptions): RuntimeCompositionContext {
   return {
     ...options,
     preference: options.preference ?? 'auto',
@@ -121,8 +119,5 @@ function runtimeProbe(
 ): readonly [string, readonly string[]] {
   return kind === 'native'
     ? [context.certbotExecutable ?? 'certbot', ['--version']]
-    : [
-        context.dockerExecutable ?? 'docker',
-        ['version', '--format', '{{.Server.Version}}'],
-      ];
+    : [context.dockerExecutable ?? 'docker', ['version', '--format', '{{.Server.Version}}']];
 }
