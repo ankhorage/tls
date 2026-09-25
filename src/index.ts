@@ -18,14 +18,14 @@ export { renewCertificatesAsync } from './features/certificates/application/use-
 export { createCertificateRuntimeAsync } from './features/certificates/composition/createCertificateRuntimeAsync.js';
 export { resolveCertificateStorage } from './features/certificates/composition/resolveCertificateStorage.js';
 export { inspectTlsConsumerAsync } from './features/consumers/composition/inspectTlsConsumerAsync.js';
-export type { DeploymentHookPort } from './features/deployment/application/ports/outbound/deploymentHookPort.js';
-export { runDeploymentHookAsync } from './features/deployment/application/use-cases/runDeploymentHookAsync.js';
-export { executeDeploymentHookAsync } from './features/deployment/composition/executeDeploymentHookAsync.js';
 export {
   isTlsConsumer,
   TLS_CONSUMERS,
   type TlsConsumer,
 } from './features/consumers/domain/tlsConsumer.js';
+export type { DeploymentHookPort } from './features/deployment/application/ports/outbound/deploymentHookPort.js';
+export { runDeploymentHookAsync } from './features/deployment/application/use-cases/runDeploymentHookAsync.js';
+export { executeDeploymentHookAsync } from './features/deployment/composition/executeDeploymentHookAsync.js';
 export type {
   CertificateRenewalResult,
   CertificateRuntimeKind,
