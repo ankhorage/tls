@@ -1,23 +1,32 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createSystemdRenewalScheduler } from '../../../features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { enableRenewalAutomationAsync } from '../../../features/automation/application/use-cases/enableRenewalAutomationAsync.js';
-import { CERTBOT_STORAGE_VOLUME } from '../../../features/certificates/constants/certbot.js';
+import { parseTlsRuntimeOptions } from '../../utils/parseTlsRuntimeOptions.js';
 
-/*** Enable daily persistent TLS renewal checks with the systemd scheduler adapter. */
+/*** Enable daily persistent TLS renewal checks through the scheduler composition boundary. */
 export const enable: AnkhCommandHandler = async (request) => {
   try {
-    const storageVolumeName = parseStorageVolume(request.argv);
+    const parsed = parseTlsRuntimeOptions(request.argv);
+    if (parsed.remaining.length !== 0) {
+      throw new Error(
+        'Usage: ankh tls automation enable [--storage <path>] [--runtime auto|native|docker]',
+      );
+    }
     const [, entrypoint] = process.argv;
-    if (entrypoint === undefined)
+    if (entrypoint === undefined) {
       throw new Error('Could not resolve the running Ankh CLI entrypoint.');
+    }
 
-    const scheduler = createSystemdRenewalScheduler({
+    const scheduler = createRenewalScheduler({
       ankhCommand: [process.execPath, entrypoint],
     });
-    await enableRenewalAutomationAsync(scheduler, storageVolumeName);
+    await enableRenewalAutomationAsync(scheduler, {
+      runtimePreference: parsed.runtimePreference,
+      storageDirectory: parsed.storageDirectory,
+    });
     request.context.writeStdout(
-      `TLS renewal automation enabled for storage volume "${storageVolumeName}".\n`,
+      `TLS renewal automation enabled for "${parsed.storageDirectory}" using runtime "${parsed.runtimePreference}".\n`,
     );
     return { exitCode: 0 };
   } catch (error) {
@@ -27,12 +36,3 @@ export const enable: AnkhCommandHandler = async (request) => {
     return { exitCode: 1 };
   }
 };
-
-/*** Parse the optional certificate-storage override. */
-function parseStorageVolume(argv: readonly string[]): string {
-  if (argv.length === 0) return CERTBOT_STORAGE_VOLUME;
-  if (argv.length === 2 && argv[0] === '--storage-volume' && argv[1] !== undefined) {
-    return argv[1];
-  }
-  throw new Error('Usage: ankh tls automation enable [--storage-volume <docker-volume>]');
-}
