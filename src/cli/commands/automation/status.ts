@@ -1,7 +1,7 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createSystemdRenewalScheduler } from '../../../features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.js';
 import { readRenewalAutomationStatusAsync } from '../../../features/automation/application/use-cases/readRenewalAutomationStatusAsync.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 
 /*** Show whether the configured TLS renewal scheduler is installed and active. */
 export const status: AnkhCommandHandler = async (request) => {
@@ -13,7 +13,7 @@ export const status: AnkhCommandHandler = async (request) => {
     if (entrypoint === undefined)
       throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
-    const scheduler = createSystemdRenewalScheduler({
+    const scheduler = createRenewalScheduler({
       ankhCommand: [process.execPath, entrypoint],
     });
     const result = await readRenewalAutomationStatusAsync(scheduler);

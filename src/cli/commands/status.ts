@@ -1,15 +1,24 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createDockerCertbotRuntime } from '../../features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.js';
 import { readCertificateStatusAsync } from '../../features/certificates/application/use-cases/readCertificateStatusAsync.js';
-import { CERTBOT_STORAGE_VOLUME } from '../../features/certificates/constants/certbot.js';
+import { createCertificateRuntimeAsync } from '../../features/certificates/composition/createCertificateRuntimeAsync.js';
+import { parseTlsRuntimeOptions } from '../utils/parseTlsRuntimeOptions.js';
 
-/*** Show certificates known to the persistent certificate runtime. */
+/*** Show certificates known to the selected persistent certificate runtime. */
 export const status: AnkhCommandHandler = async (request) => {
   try {
-    const storageVolumeName = parseStorageVolume(request.argv);
-    const runtime = createDockerCertbotRuntime({ storageVolumeName });
-    request.context.writeStdout(await readCertificateStatusAsync(runtime));
+    const parsed = parseTlsRuntimeOptions(request.argv);
+    if (parsed.remaining.length !== 0) {
+      throw new Error('Usage: ankh tls status [--storage <path>] [--runtime auto|native|docker]');
+    }
+    const resolved = await createCertificateRuntimeAsync({
+      preference: parsed.runtimePreference,
+      storageDirectory: parsed.storageDirectory,
+    });
+    request.context.writeStdout(
+      `TLS runtime: ${resolved.kind}\nstorage: ${resolved.storage.rootDirectory}\n\n`,
+    );
+    request.context.writeStdout(await readCertificateStatusAsync(resolved.runtime));
     return { exitCode: 0 };
   } catch (error) {
     request.context.writeStderr(
@@ -18,12 +27,3 @@ export const status: AnkhCommandHandler = async (request) => {
     return { exitCode: 1 };
   }
 };
-
-/*** Parse the optional Docker-backed storage override. */
-function parseStorageVolume(argv: readonly string[]): string {
-  if (argv.length === 0) return CERTBOT_STORAGE_VOLUME;
-  if (argv.length === 2 && argv[0] === '--storage-volume' && argv[1] !== undefined) {
-    return argv[1];
-  }
-  throw new Error('Usage: ankh tls status [--storage-volume <docker-volume>]');
-}

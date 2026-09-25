@@ -1,20 +1,32 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createDockerCertbotRuntime } from '../../features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.js';
 import { renewCertificatesAsync } from '../../features/certificates/application/use-cases/renewCertificatesAsync.js';
-import { CERTBOT_STORAGE_VOLUME } from '../../features/certificates/constants/certbot.js';
+import { createCertificateRuntimeAsync } from '../../features/certificates/composition/createCertificateRuntimeAsync.js';
+import { executeDeploymentHookAsync } from '../../features/deployment/composition/executeDeploymentHookAsync.js';
+import { parseTlsDeploymentOptions } from '../utils/parseTlsDeploymentOptions.js';
+import { parseTlsRuntimeOptions } from '../utils/parseTlsRuntimeOptions.js';
 
-/*** Renew all due certificates from persistent Certbot state. */
+/*** Renew due certificates and run an explicit host deploy command only when files changed. */
 export const renew: AnkhCommandHandler = async (request) => {
   try {
-    const parsed = parseArguments(request.argv);
-    const runtime = createDockerCertbotRuntime({
-      storageVolumeName: parsed.storageVolumeName,
+    const runtimeOptions = parseTlsRuntimeOptions(request.argv);
+    const deploymentOptions = parseTlsDeploymentOptions(runtimeOptions.remaining);
+    const parsed = parseArguments(deploymentOptions.remaining);
+    const resolved = await createCertificateRuntimeAsync({
+      preference: runtimeOptions.runtimePreference,
+      storageDirectory: runtimeOptions.storageDirectory,
+      output: {
+        onStderr: (chunk) => request.context.writeStderr(chunk),
+        onStdout: (chunk) => request.context.writeStdout(chunk),
+      },
     });
-    await renewCertificatesAsync(runtime, { dryRun: parsed.dryRun });
     request.context.writeStdout(
-      parsed.dryRun ? 'TLS renewal dry-run passed.\n' : 'TLS renewal check completed.\n',
+      `TLS renewal runtime: ${resolved.kind}\nstorage: ${resolved.storage.rootDirectory}\n\n`,
     );
+
+    const result = await renewCertificatesAsync(resolved.runtime, { dryRun: parsed.dryRun });
+    await runDeployHookIfNeededAsync(request, deploymentOptions.deployCommand, result.renewed);
+    request.context.writeStdout(renderRenewalResult(parsed.dryRun, result.renewed));
     return { exitCode: 0 };
   } catch (error) {
     request.context.writeStderr(
@@ -26,32 +38,39 @@ export const renew: AnkhCommandHandler = async (request) => {
 
 interface RenewArguments {
   readonly dryRun: boolean;
-  readonly storageVolumeName: string;
 }
 
-/*** Parse renewal flags without mutable parser state. */
-function parseArguments(argv: readonly string[]): RenewArguments {
-  return parseTokens(argv, {
-    dryRun: false,
-    storageVolumeName: CERTBOT_STORAGE_VOLUME,
+/*** Run one explicit deployment hook only when persisted certificate state changed. */
+async function runDeployHookIfNeededAsync(
+  request: Parameters<AnkhCommandHandler>[0],
+  command: string | undefined,
+  renewed: boolean,
+): Promise<void> {
+  if (!renewed || command === undefined) return;
+
+  request.context.writeStdout(`Running TLS deploy command: ${command}\n`);
+  await executeDeploymentHookAsync({
+    command,
+    output: {
+      onStderr: (chunk) => request.context.writeStderr(chunk),
+      onStdout: (chunk) => request.context.writeStdout(chunk),
+    },
   });
 }
 
-/*** Recursively consume renewal tokens. */
-function parseTokens(argv: readonly string[], parsed: RenewArguments): RenewArguments {
-  const [token, value, ...rest] = argv;
-  if (token === undefined) return parsed;
+/*** Render a concise renewal result after Certbot and any deployment hook complete. */
+function renderRenewalResult(dryRun: boolean, renewed: boolean): string {
+  if (dryRun) return 'TLS renewal dry-run passed.\n';
+  return renewed
+    ? 'TLS renewal completed; certificate files changed.\n'
+    : 'TLS renewal check completed; no certificate files changed.\n';
+}
 
-  if (token === '--dry-run') {
-    return parseTokens(argv.slice(1), { ...parsed, dryRun: true });
-  }
-
-  if (token === '--storage-volume') {
-    if (value === undefined || value.startsWith('--')) {
-      throw new Error('--storage-volume requires a value.');
-    }
-    return parseTokens(rest, { ...parsed, storageVolumeName: value });
-  }
-
-  throw new Error(`Unknown argument: ${token}`);
+/*** Parse renewal-specific flags after shared runtime and deployment options are removed. */
+function parseArguments(argv: readonly string[]): RenewArguments {
+  if (argv.length === 0) return { dryRun: false };
+  if (argv.length === 1 && argv[0] === '--dry-run') return { dryRun: true };
+  throw new Error(
+    'Usage: ankh tls renew [--dry-run] [--storage <path>] [--runtime auto|native|docker] [--deploy-command <command>]',
+  );
 }

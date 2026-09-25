@@ -1,7 +1,7 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createSystemdRenewalScheduler } from '../../../features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.js';
 import { disableRenewalAutomationAsync } from '../../../features/automation/application/use-cases/disableRenewalAutomationAsync.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 
 /*** Disable TLS renewal scheduling and remove systemd-owned unit files. */
 export const disable: AnkhCommandHandler = async (request) => {
@@ -13,7 +13,7 @@ export const disable: AnkhCommandHandler = async (request) => {
     if (entrypoint === undefined)
       throw new Error('Could not resolve the running Ankh CLI entrypoint.');
 
-    const scheduler = createSystemdRenewalScheduler({
+    const scheduler = createRenewalScheduler({
       ankhCommand: [process.execPath, entrypoint],
     });
     await disableRenewalAutomationAsync(scheduler);

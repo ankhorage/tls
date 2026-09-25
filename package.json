@@ -71,7 +71,8 @@
     "changeset": "ankhorage-changeset",
     "changeset:status": "ankhorage-changeset status --since=origin/main",
     "version-packages": "ankhorage-changeset version",
-    "docs": "paradox"
+    "docs": "paradox",
+    "test:standalone": "bun test src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
   },
   "dependencies": {
     "@ankhorage/ankh": "^0.10.4",
