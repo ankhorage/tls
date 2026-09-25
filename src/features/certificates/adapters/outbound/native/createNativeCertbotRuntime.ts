@@ -1,6 +1,6 @@
 import type { CertificateStoragePaths } from '../../../../../types/certificates.js';
-import type { ProcessRunOptions, RunProcessAsync } from '../../../../../types/process.js';
 import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
+import type { ProcessRunOptions, RunProcessAsync } from '../../../../../types/process.js';
 import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
 import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import type { CertificateRuntimePort } from '../../../application/ports/outbound/certificateRuntimePort.js';
@@ -75,11 +75,7 @@ async function renewAsync(runtime: NativeRuntime, dryRun: boolean): Promise<void
   await prepareCertificateStorageAsync(runtime.storage);
   await runCheckedProcessAsync(
     runtime.certbotExecutable,
-    [
-      'renew',
-      ...stateDirectoryArguments(runtime.storage),
-      ...(dryRun ? ['--dry-run'] : []),
-    ],
+    ['renew', ...stateDirectoryArguments(runtime.storage), ...(dryRun ? ['--dry-run'] : [])],
     runtime.runProcessAsync,
     runtime.output,
   );
@@ -121,9 +117,7 @@ async function probeNativeCertbotAsync(runtime: NativeRuntime): Promise<TlsPrefl
           ? result.stdout.trim() || 'Native Certbot is available.'
           : result.stderr.trim() || `Certbot exited with ${result.exitCode}.`,
       status: result.exitCode === 0 ? 'pass' : 'fail',
-      ...(result.exitCode === 0
-        ? {}
-        : { tip: 'Install Certbot or use --runtime docker.' }),
+      ...(result.exitCode === 0 ? {} : { tip: 'Install Certbot or use --runtime docker.' }),
     };
   } catch (error) {
     return {
