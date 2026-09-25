@@ -1,45 +1,43 @@
-import type { RunProcessAsync } from '../../../../../types/process.js';
+import type { CertificateStoragePaths } from '../../../../../types/certificates.js';
+import type { ProcessRunOptions, RunProcessAsync } from '../../../../../types/process.js';
+import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
 import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
 import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import type { CertificateRuntimePort } from '../../../application/ports/outbound/certificateRuntimePort.js';
 import {
-  CERTBOT_CONFIG_DIR,
+  CERTBOT_CONTAINER_CONFIG_DIR,
+  CERTBOT_CONTAINER_LOGS_DIR,
+  CERTBOT_CONTAINER_ROOT,
+  CERTBOT_CONTAINER_WEBROOT,
+  CERTBOT_CONTAINER_WORK_DIR,
   CERTBOT_IMAGE,
-  CERTBOT_LOGS_DIR,
-  CERTBOT_STORAGE_VOLUME,
-  CERTBOT_WEBROOT,
-  CERTBOT_WORK_DIR,
 } from '../../../constants/certbot.js';
-import { runDockerTlsPreflightAsync } from './runDockerTlsPreflightAsync.js';
+import { prepareCertificateStorageAsync } from '../../../utils/prepareCertificateStorageAsync.js';
+import { runHttp01PreflightAsync } from '../../../utils/runHttp01PreflightAsync.js';
 
 interface CreateDockerCertbotRuntimeOptions {
   readonly dockerExecutable?: string;
   readonly image?: string;
+  readonly output?: ProcessRunOptions;
   readonly runProcessAsync?: RunProcessAsync;
-  readonly storageVolumeName?: string;
+  readonly storage: CertificateStoragePaths;
 }
 
-/*** Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness. */
+/*** Create a Docker-backed Certbot adapter over host-owned certificate storage. */
 export function createDockerCertbotRuntime(
-  options: CreateDockerCertbotRuntimeOptions = {},
+  options: CreateDockerCertbotRuntimeOptions,
 ): CertificateRuntimePort {
   const runtime: DockerRuntime = {
     dockerExecutable: options.dockerExecutable ?? 'docker',
     image: options.image ?? CERTBOT_IMAGE,
+    output: options.output ?? {},
     runProcessAsync: options.runProcessAsync ?? defaultRunProcessAsync,
-    storageVolumeName: options.storageVolumeName ?? CERTBOT_STORAGE_VOLUME,
+    storage: options.storage,
   };
 
   return {
     issueAsync: (input) => issueAsync(runtime, input),
-    preflightAsync: ({ domains }) =>
-      runDockerTlsPreflightAsync({
-        dockerExecutable: runtime.dockerExecutable,
-        domains,
-        image: runtime.image,
-        runProcessAsync: runtime.runProcessAsync,
-        storageVolumeName: runtime.storageVolumeName,
-      }),
+    preflightAsync: ({ domains }) => preflightAsync(runtime, domains),
     renewAsync: (input) => renewAsync(runtime, input.dryRun),
     statusAsync: () => statusAsync(runtime),
   };
@@ -48,16 +46,17 @@ export function createDockerCertbotRuntime(
 interface DockerRuntime {
   readonly dockerExecutable: string;
   readonly image: string;
+  readonly output: ProcessRunOptions;
   readonly runProcessAsync: RunProcessAsync;
-  readonly storageVolumeName: string;
+  readonly storage: CertificateStoragePaths;
 }
 
-/*** Issue one HTTP-01 certificate with persistent Certbot state. */
+/*** Issue one HTTP-01 certificate with persistent host-owned Certbot state. */
 async function issueAsync(
   runtime: DockerRuntime,
   input: Parameters<CertificateRuntimePort['issueAsync']>[0],
 ): Promise<void> {
-  await ensureStorageAsync(runtime);
+  await prepareCertificateStorageAsync(runtime.storage);
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -65,7 +64,7 @@ async function issueAsync(
       'certonly',
       '--webroot',
       '--webroot-path',
-      CERTBOT_WEBROOT,
+      CERTBOT_CONTAINER_WEBROOT,
       ...stateDirectoryArguments(),
       '--non-interactive',
       '--agree-tos',
@@ -79,12 +78,13 @@ async function issueAsync(
       ...(input.forceRenewal ? ['--force-renewal'] : []),
     ],
     runtime.runProcessAsync,
+    runtime.output,
   );
 }
 
-/*** Ask Certbot to renew only certificates whose persisted policy says they are due. */
+/*** Ask Docker Certbot to renew certificates according to persisted ACME state. */
 async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void> {
-  await ensureStorageAsync(runtime);
+  await prepareCertificateStorageAsync(runtime.storage);
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -94,12 +94,13 @@ async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void
       ...(dryRun ? ['--dry-run'] : []),
     ],
     runtime.runProcessAsync,
+    runtime.output,
   );
 }
 
-/*** Read Certbot's persisted certificate inventory. */
+/*** Read Docker Certbot's persisted certificate inventory. */
 async function statusAsync(runtime: DockerRuntime): Promise<string> {
-  await ensureStorageAsync(runtime);
+  await prepareCertificateStorageAsync(runtime.storage);
   return (
     await runCheckedProcessAsync(
       runtime.dockerExecutable,
@@ -109,46 +110,70 @@ async function statusAsync(runtime: DockerRuntime): Promise<string> {
   ).stdout;
 }
 
-/*** Ensure all persistent Certbot directories exist in the configured storage volume. */
-async function ensureStorageAsync(runtime: DockerRuntime): Promise<void> {
-  await runCheckedProcessAsync(
-    runtime.dockerExecutable,
-    [
-      'run',
-      '--rm',
-      '--pull=missing',
-      '--entrypoint',
-      'sh',
-      '-v',
-      `${runtime.storageVolumeName}:/data`,
-      runtime.image,
-      '-c',
-      `mkdir -p ${CERTBOT_WEBROOT} ${CERTBOT_CONFIG_DIR} ${CERTBOT_WORK_DIR} ${CERTBOT_LOGS_DIR}`,
-    ],
-    runtime.runProcessAsync,
-  );
+/*** Verify Docker runtime availability plus the shared host HTTP-01 contract. */
+async function preflightAsync(
+  runtime: DockerRuntime,
+  domains: readonly string[],
+): Promise<readonly TlsPreflightCheck[]> {
+  const runtimeChecks = [await probeDockerAsync(runtime)];
+  return runHttp01PreflightAsync({
+    domains,
+    runtimeChecks,
+    storage: runtime.storage,
+  });
 }
 
-/*** Build the Docker run prefix shared by Certbot lifecycle commands. */
+/*** Probe Docker daemon access without coupling certificate storage to a Docker volume. */
+async function probeDockerAsync(runtime: DockerRuntime): Promise<TlsPreflightCheck> {
+  try {
+    const result = await runtime.runProcessAsync(runtime.dockerExecutable, [
+      'version',
+      '--format',
+      '{{.Server.Version}}',
+    ]);
+    return {
+      id: 'runtime:docker',
+      label: 'Docker Certbot runtime',
+      message:
+        result.exitCode === 0
+          ? `Docker daemon is reachable; Certbot image: ${runtime.image}.`
+          : result.stderr.trim() || `Docker exited with ${result.exitCode}.`,
+      status: result.exitCode === 0 ? 'pass' : 'fail',
+      ...(result.exitCode === 0
+        ? {}
+        : { tip: 'Start Docker or install native Certbot and use --runtime native.' }),
+    };
+  } catch (error) {
+    return {
+      id: 'runtime:docker',
+      label: 'Docker Certbot runtime',
+      message: error instanceof Error ? error.message : String(error),
+      status: 'fail',
+      tip: 'Start Docker or install native Certbot and use --runtime native.',
+    };
+  }
+}
+
+/*** Build the Docker invocation prefix using a bind mount to host-owned TLS storage. */
 function dockerPrefix(runtime: DockerRuntime): readonly string[] {
   return [
     'run',
     '--rm',
     '--pull=missing',
     '-v',
-    `${runtime.storageVolumeName}:/data`,
+    `${runtime.storage.rootDirectory}:${CERTBOT_CONTAINER_ROOT}`,
     runtime.image,
   ];
 }
 
-/*** Build Certbot's persistent state-directory arguments. */
+/*** Build Certbot's container-local persistent state-directory arguments. */
 function stateDirectoryArguments(): readonly string[] {
   return [
     '--config-dir',
-    CERTBOT_CONFIG_DIR,
+    CERTBOT_CONTAINER_CONFIG_DIR,
     '--work-dir',
-    CERTBOT_WORK_DIR,
+    CERTBOT_CONTAINER_WORK_DIR,
     '--logs-dir',
-    CERTBOT_LOGS_DIR,
+    CERTBOT_CONTAINER_LOGS_DIR,
   ];
 }
