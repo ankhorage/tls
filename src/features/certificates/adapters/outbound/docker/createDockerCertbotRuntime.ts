@@ -13,6 +13,7 @@ import {
   CERTBOT_IMAGE,
 } from '../../../constants/certbot.js';
 import { prepareCertificateStorageAsync } from '../../../utils/prepareCertificateStorageAsync.js';
+import { readCertificateStateStampAsync } from '../../../utils/readCertificateStateStampAsync.js';
 import { runHttp01PreflightAsync } from '../../../utils/runHttp01PreflightAsync.js';
 
 interface CreateDockerCertbotRuntimeOptions {
@@ -83,8 +84,12 @@ async function issueAsync(
 }
 
 /*** Ask Docker Certbot to renew certificates according to persisted ACME state. */
-async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void> {
+async function renewAsync(
+  runtime: DockerRuntime,
+  dryRun: boolean,
+): Promise<{ readonly renewed: boolean }> {
   await prepareCertificateStorageAsync(runtime.storage);
+  const before = await readCertificateStateStampAsync(runtime.storage.configDirectory);
   await runCheckedProcessAsync(
     runtime.dockerExecutable,
     [
@@ -96,6 +101,8 @@ async function renewAsync(runtime: DockerRuntime, dryRun: boolean): Promise<void
     runtime.runProcessAsync,
     runtime.output,
   );
+  const after = await readCertificateStateStampAsync(runtime.storage.configDirectory);
+  return { renewed: !dryRun && after > before };
 }
 
 /*** Read Docker Certbot's persisted certificate inventory. */
