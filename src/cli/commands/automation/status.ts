@@ -1,6 +1,6 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createSystemdRenewalScheduler } from '../../../features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { readRenewalAutomationStatusAsync } from '../../../features/automation/application/use-cases/readRenewalAutomationStatusAsync.js';
 
 /*** Show whether the configured TLS renewal scheduler is installed and active. */
