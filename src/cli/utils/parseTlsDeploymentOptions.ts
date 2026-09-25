@@ -4,9 +4,7 @@ interface ParsedTlsDeploymentOptions {
 }
 
 /*** Parse an optional host deploy command while preserving command-specific arguments. */
-export function parseTlsDeploymentOptions(
-  argv: readonly string[],
-): ParsedTlsDeploymentOptions {
+export function parseTlsDeploymentOptions(argv: readonly string[]): ParsedTlsDeploymentOptions {
   return parseTokens(argv, { remaining: [] });
 }
 
