@@ -1,6 +1,6 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createSystemdRenewalScheduler } from '../../../features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.js';
+import { createRenewalScheduler } from '../../../features/automation/composition/createRenewalScheduler.js';
 import { disableRenewalAutomationAsync } from '../../../features/automation/application/use-cases/disableRenewalAutomationAsync.js';
 
 /*** Disable TLS renewal scheduling and remove systemd-owned unit files. */
