@@ -1,6 +1,6 @@
 import type { CertificateStoragePaths } from '../../../../../types/certificates.js';
-import type { ProcessRunOptions, RunProcessAsync } from '../../../../../types/process.js';
 import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
+import type { ProcessRunOptions, RunProcessAsync } from '../../../../../types/process.js';
 import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAsync.js';
 import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import type { CertificateRuntimePort } from '../../../application/ports/outbound/certificateRuntimePort.js';
