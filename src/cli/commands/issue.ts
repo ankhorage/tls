@@ -1,21 +1,45 @@
 import type { AnkhCommandHandler } from '@ankhorage/ankh';
 
-import { createDockerCertbotRuntime } from '../../features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.js';
 import { checkIssueReadinessAsync } from '../../features/certificates/application/use-cases/checkIssueReadinessAsync.js';
 import { issueCertificatesAsync } from '../../features/certificates/application/use-cases/issueCertificatesAsync.js';
-import { CERTBOT_STORAGE_VOLUME } from '../../features/certificates/constants/certbot.js';
+import { createCertificateRuntimeAsync } from '../../features/certificates/composition/createCertificateRuntimeAsync.js';
+import { inspectTlsConsumerAsync } from '../../features/consumers/composition/inspectTlsConsumerAsync.js';
 import type { TlsPreflightCheck } from '../../types/preflight.js';
+import { parseTlsConsumerOptions } from '../utils/parseTlsConsumerOptions.js';
+import { parseTlsRuntimeOptions } from '../utils/parseTlsRuntimeOptions.js';
 
 /*** Run readiness checks and issue certificates only when every prerequisite passes. */
 export const issue: AnkhCommandHandler = async (request) => {
   try {
-    const parsed = parseIssueArguments(request.argv);
-    const runtime = createDockerCertbotRuntime({
-      storageVolumeName: parsed.storageVolumeName,
+    const runtimeOptions = parseTlsRuntimeOptions(request.argv);
+    const consumerOptions = parseTlsConsumerOptions(runtimeOptions.remaining);
+    const parsed = parseIssueArguments(consumerOptions.remaining);
+    const resolved = await createCertificateRuntimeAsync({
+      preference: runtimeOptions.runtimePreference,
+      storageDirectory: runtimeOptions.storageDirectory,
+      output: {
+        onStdout: request.context.writeStdout,
+        onStderr: request.context.writeStderr,
+      },
     });
-    const checks = await checkIssueReadinessAsync(runtime, parsed.domains);
-    request.context.writeStdout(renderChecks(checks));
 
+    request.context.writeStdout(
+      `TLS runtime: ${resolved.kind}\nstorage: ${resolved.storage.rootDirectory}\nHTTP-01 webroot: ${resolved.storage.webrootDirectory}\n\n`,
+    );
+
+    if (consumerOptions.consumer !== undefined) {
+      const guidance = await inspectTlsConsumerAsync({
+        consumer: consumerOptions.consumer,
+        configPath: consumerOptions.configPath,
+        cwd: process.cwd(),
+        domains: parsed.domains,
+        storage: resolved.storage,
+      });
+      request.context.writeStdout(`${guidance.text}\n`);
+    }
+
+    const checks = await checkIssueReadinessAsync(resolved.runtime, parsed.domains);
+    request.context.writeStdout(renderChecks(checks));
     if (checks.some(({ status }) => status === 'fail')) {
       request.context.writeStderr(
         'TLS issue aborted: fix the failed prerequisite(s) above and retry.\n',
@@ -23,7 +47,7 @@ export const issue: AnkhCommandHandler = async (request) => {
       return { exitCode: 1 };
     }
 
-    await issueCertificatesAsync(runtime, parsed);
+    await issueCertificatesAsync(resolved.runtime, parsed);
     request.context.writeStdout(
       `Issued ${parsed.domains.length} certificate(s): ${parsed.domains.join(', ')}\n`,
     );
@@ -39,7 +63,6 @@ interface ParsedIssueArguments {
   readonly email: string;
   readonly forceRenewal: boolean;
   readonly staging: boolean;
-  readonly storageVolumeName: string;
 }
 
 interface IssueParseState {
@@ -47,21 +70,19 @@ interface IssueParseState {
   readonly email?: string;
   readonly forceRenewal: boolean;
   readonly staging: boolean;
-  readonly storageVolumeName: string;
 }
 
-/*** Parse issue arguments while preserving domain order. */
+/*** Parse issue-specific arguments while preserving domain order. */
 function parseIssueArguments(argv: readonly string[]): ParsedIssueArguments {
   const parsed = parseTokens(argv, {
     domains: [],
     forceRenewal: false,
     staging: false,
-    storageVolumeName: CERTBOT_STORAGE_VOLUME,
   });
 
   if (parsed.email === undefined) {
     throw new Error(
-      'Usage: ankh tls issue <domain...> --email <email> [--storage-volume <name>] [--staging] [--force-renewal]',
+      'Usage: ankh tls issue <domain...> --email <email> [--storage <path>] [--runtime auto|native|docker] [--consumer <profile>] [--consumer-config <path>] [--staging] [--force-renewal]',
     );
   }
 
@@ -76,19 +97,14 @@ function parseTokens(argv: readonly string[], parsed: IssueParseState): IssuePar
   if (token === '--staging') {
     return parseTokens(argv.slice(1), { ...parsed, staging: true });
   }
-
   if (token === '--force-renewal') {
     return parseTokens(argv.slice(1), { ...parsed, forceRenewal: true });
   }
-
-  if (token === '--email' || token === '--storage-volume') {
+  if (token === '--email') {
     if (value === undefined || value.startsWith('--')) {
-      throw new Error(`${token} requires a value.`);
+      throw new Error('--email requires a value.');
     }
-    return parseTokens(
-      rest,
-      token === '--email' ? { ...parsed, email: value } : { ...parsed, storageVolumeName: value },
-    );
+    return parseTokens(rest, { ...parsed, email: value });
   }
 
   if (token.startsWith('--')) throw new Error(`Unknown option: ${token}`);
