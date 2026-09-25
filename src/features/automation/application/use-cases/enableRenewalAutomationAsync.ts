@@ -5,6 +5,7 @@ import type { RenewalSchedulerPort } from '../ports/outbound/renewalSchedulerPor
 export async function enableRenewalAutomationAsync(
   scheduler: RenewalSchedulerPort,
   input: {
+    readonly deployCommand?: string;
     readonly runtimePreference: CertificateRuntimePreference;
     readonly storageDirectory: string;
   },
