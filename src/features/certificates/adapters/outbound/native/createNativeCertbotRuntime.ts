@@ -5,6 +5,7 @@ import { runCheckedProcessAsync } from '../../../../../utils/runCheckedProcessAs
 import { runProcessAsync as defaultRunProcessAsync } from '../../../../../utils/runProcessAsync.js';
 import type { CertificateRuntimePort } from '../../../application/ports/outbound/certificateRuntimePort.js';
 import { prepareCertificateStorageAsync } from '../../../utils/prepareCertificateStorageAsync.js';
+import { readCertificateStateStampAsync } from '../../../utils/readCertificateStateStampAsync.js';
 import { runHttp01PreflightAsync } from '../../../utils/runHttp01PreflightAsync.js';
 
 interface CreateNativeCertbotRuntimeOptions {
@@ -71,14 +72,20 @@ async function issueAsync(
 }
 
 /*** Renew due certificates with native Certbot. */
-async function renewAsync(runtime: NativeRuntime, dryRun: boolean): Promise<void> {
+async function renewAsync(
+  runtime: NativeRuntime,
+  dryRun: boolean,
+): Promise<{ readonly renewed: boolean }> {
   await prepareCertificateStorageAsync(runtime.storage);
+  const before = await readCertificateStateStampAsync(runtime.storage.configDirectory);
   await runCheckedProcessAsync(
     runtime.certbotExecutable,
     ['renew', ...stateDirectoryArguments(runtime.storage), ...(dryRun ? ['--dry-run'] : [])],
     runtime.runProcessAsync,
     runtime.output,
   );
+  const after = await readCertificateStateStampAsync(runtime.storage.configDirectory);
+  return { renewed: !dryRun && after > before };
 }
 
 /*** Read the native Certbot certificate inventory. */
