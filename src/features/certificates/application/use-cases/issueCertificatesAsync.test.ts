@@ -23,7 +23,7 @@ function createRuntime(issueAsync: CertificateRuntimePort['issueAsync']): Certif
   return {
     issueAsync,
     preflightAsync: () => Promise.resolve([]),
-    renewAsync: () => Promise.resolve(),
+    renewAsync: () => Promise.resolve({ renewed: false }),
     statusAsync: () => Promise.resolve(''),
   };
 }
