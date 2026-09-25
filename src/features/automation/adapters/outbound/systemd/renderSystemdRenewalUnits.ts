@@ -2,6 +2,7 @@ import type { CertificateRuntimePreference } from '../../../../../types/certific
 
 interface RenderSystemdRenewalUnitsInput {
   readonly ankhCommand: readonly [string, string];
+  readonly deployCommand?: string;
   readonly runtimePreference: CertificateRuntimePreference;
   readonly storageDirectory: string;
 }
@@ -23,6 +24,7 @@ export function renderSystemdRenewalUnits(input: RenderSystemdRenewalUnitsInput)
     input.storageDirectory,
     '--runtime',
     input.runtimePreference,
+    ...(input.deployCommand === undefined ? [] : ['--deploy-command', input.deployCommand]),
   ]
     .map(escapeExecArgument)
     .join(' ');
