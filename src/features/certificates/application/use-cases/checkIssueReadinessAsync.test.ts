@@ -31,7 +31,7 @@ function createRuntime(onPreflight: () => void = () => undefined): CertificateRu
         { id: 'docker', label: 'Docker daemon', message: 'ok', status: 'pass' },
       ]);
     },
-    renewAsync: () => Promise.resolve(),
+    renewAsync: () => Promise.resolve({ renewed: false }),
     statusAsync: () => Promise.resolve(''),
   };
 }
