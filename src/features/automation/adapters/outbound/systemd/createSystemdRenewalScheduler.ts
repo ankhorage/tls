@@ -30,7 +30,8 @@ export function createSystemdRenewalScheduler(
       assertSystemdPlatform();
       const units = renderSystemdRenewalUnits({
         ankhCommand: options.ankhCommand,
-        storageVolumeName: input.storageVolumeName,
+        runtimePreference: input.runtimePreference,
+        storageDirectory: input.storageDirectory,
       });
       await mkdir(unitDirectory, { recursive: true });
       await Promise.all([
