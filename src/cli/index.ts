@@ -26,13 +26,19 @@ const commands = [
     path: ['issue'],
     capability: CAPABILITIES.issue,
     summary: 'Preflight HTTP-01 prerequisites and issue one certificate per domain.',
-    examples: ['ankh tls issue app.example.com --email admin@example.com'],
+    examples: [
+      'ankh tls issue app.example.com --email admin@example.com',
+      'ankh tls issue app.example.com --email admin@example.com --consumer nginx',
+    ],
   },
   {
     path: ['renew'],
     capability: CAPABILITIES.renew,
     summary: 'Renew certificates that are due according to persisted ACME state.',
-    examples: ['ankh tls renew --dry-run'],
+    examples: [
+      'ankh tls renew --dry-run',
+      'ankh tls renew --deploy-command "nginx -s reload"',
+    ],
   },
   {
     path: ['status'],
