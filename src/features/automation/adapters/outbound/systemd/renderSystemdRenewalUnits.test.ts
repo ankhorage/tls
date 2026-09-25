@@ -6,22 +6,24 @@ describe('renderSystemdRenewalUnits', () => {
   test('renders persistent daily renewal with a randomized delay', () => {
     const units = renderSystemdRenewalUnits({
       ankhCommand: ['/opt/bun/bin/bun', '/opt/ankh/dist/bin.js'],
-      storageVolumeName: 'tls-state',
+      runtimePreference: 'auto',
+      storageDirectory: '/var/lib/ankh tls',
     });
 
     expect(units.service).toContain(
-      'ExecStart="/opt/bun/bin/bun" "/opt/ankh/dist/bin.js" "tls" "renew" "--storage-volume" "tls-state"',
+      'ExecStart="/opt/bun/bin/bun" "/opt/ankh/dist/bin.js" "tls" "renew" "--storage" "/var/lib/ankh tls" "--runtime" "auto"',
     );
     expect(units.timer).toContain('OnCalendar=daily');
     expect(units.timer).toContain('RandomizedDelaySec=6h');
     expect(units.timer).toContain('Persistent=true');
   });
 
-  test('rejects unsafe storage-volume syntax', () => {
+  test('rejects empty storage paths', () => {
     expect(() =>
       renderSystemdRenewalUnits({
         ankhCommand: ['/usr/bin/bun', '/opt/ankh.js'],
-        storageVolumeName: 'bad volume',
+        runtimePreference: 'native',
+        storageDirectory: '   ',
       }),
     ).toThrow();
   });
