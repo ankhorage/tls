@@ -1,3 +1,4 @@
+import type { CertificateRenewalResult } from '../../../../../types/certificates.js';
 import type { TlsPreflightCheck } from '../../../../../types/preflight.js';
 
 export interface CertificateRuntimePort {
@@ -10,6 +11,6 @@ export interface CertificateRuntimePort {
   preflightAsync(input: {
     readonly domains: readonly string[];
   }): Promise<readonly TlsPreflightCheck[]>;
-  renewAsync(input: { readonly dryRun: boolean }): Promise<void>;
+  renewAsync(input: { readonly dryRun: boolean }): Promise<CertificateRenewalResult>;
   statusAsync(): Promise<string>;
 }
