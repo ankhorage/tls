@@ -1,0 +1,5 @@
+sequenceDiagram
+  participant participant_createRenewalScheduler as createRenewalScheduler
+  participant participant_createSystemdRenewalScheduler as createSystemdRenewalScheduler
+  participant_createRenewalScheduler->>participant_createSystemdRenewalScheduler: createSystemdRenewalScheduler()
+  participant_createSystemdRenewalScheduler-->>participant_createRenewalScheduler: return

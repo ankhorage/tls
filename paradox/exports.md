@@ -1,10 +1,28 @@
 # Public API
 
+## CertificateRenewalResult
+
+Kind: `type`
+Module: `src/types/certificates.ts`
+Source: `src/types/certificates.ts:6:1`
+
+### Members
+
+| Name | Kind | Type | Required | Description |
+| --- | --- | --- | --- | --- |
+| renewed | property | `boolean` | yes |  |
+
+## CertificateRuntimeKind
+
+Kind: `unknown`
+Module: `src/types/certificates.ts`
+Source: `src/types/certificates.ts:3:1`
+
 ## CertificateRuntimePort
 
 Kind: `type`
 Module: `src/features/certificates/application/ports/outbound/certificateRuntimePort.ts`
-Source: `src/features/certificates/application/ports/outbound/certificateRuntimePort.ts:3:1`
+Source: `src/features/certificates/application/ports/outbound/certificateRuntimePort.ts:4:1`
 
 ### Members
 
@@ -12,8 +30,30 @@ Source: `src/features/certificates/application/ports/outbound/certificateRuntime
 | --- | --- | --- | --- | --- |
 | issueAsync | method | `(input: { readonly domain: string; readonly email: string; readonly forceRenewal: boolean; readonly staging: boolean; }) => Promise<void>` | yes |  |
 | preflightAsync | method | `(input: { readonly domains: readonly string[]; }) => Promise<readonly TlsPreflightCheck[]>` | yes |  |
-| renewAsync | method | `(input: { readonly dryRun: boolean; }) => Promise<void>` | yes |  |
+| renewAsync | method | `(input: { readonly dryRun: boolean; }) => Promise<CertificateRenewalResult>` | yes |  |
 | statusAsync | method | `() => Promise<string>` | yes |  |
+
+## CertificateRuntimePreference
+
+Kind: `unknown`
+Module: `src/types/certificates.ts`
+Source: `src/types/certificates.ts:4:1`
+
+## CertificateStoragePaths
+
+Kind: `type`
+Module: `src/types/certificates.ts`
+Source: `src/types/certificates.ts:10:1`
+
+### Members
+
+| Name | Kind | Type | Required | Description |
+| --- | --- | --- | --- | --- |
+| configDirectory | property | `string` | yes |  |
+| logsDirectory | property | `string` | yes |  |
+| rootDirectory | property | `string` | yes |  |
+| webrootDirectory | property | `string` | yes |  |
+| workDirectory | property | `string` | yes |  |
 
 ## checkIssueReadinessAsync
 
@@ -30,19 +70,61 @@ Validate requested hostnames and inspect HTTP-01 runtime readiness before certif
   - runtime: `CertificateRuntimePort`
   - returns: `Promise<readonly TlsPreflightCheck[]>`
 
+## createCertificateRuntimeAsync
+
+Kind: `function`
+Module: `src/features/certificates/composition/createCertificateRuntimeAsync.ts`
+Source: `src/features/certificates/composition/createCertificateRuntimeAsync.ts:30:1`
+
+Select a usable certificate runtime without making Docker a package prerequisite.
+
+### Signatures
+
+- `(options: CreateCertificateRuntimeOptions) => Promise<ResolvedCertificateRuntime>`
+  - options: `CreateCertificateRuntimeOptions`
+  - returns: `Promise<ResolvedCertificateRuntime>`
+
 ## createDockerCertbotRuntime
 
 Kind: `function`
 Module: `src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts`
-Source: `src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts:23:1`
+Source: `src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts:28:1`
 
-Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.
+Create a Docker-backed Certbot adapter over host-owned certificate storage.
 
 ### Signatures
 
-- `(options?: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort`
-  - options: `CreateDockerCertbotRuntimeOptions` (optional)
+- `(options: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort`
+  - options: `CreateDockerCertbotRuntimeOptions`
   - returns: `CertificateRuntimePort`
+
+## createNativeCertbotRuntime
+
+Kind: `function`
+Module: `src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts`
+Source: `src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts:19:1`
+
+Create a native Certbot adapter over host-owned certificate storage.
+
+### Signatures
+
+- `(options: CreateNativeCertbotRuntimeOptions) => CertificateRuntimePort`
+  - options: `CreateNativeCertbotRuntimeOptions`
+  - returns: `CertificateRuntimePort`
+
+## createRenewalScheduler
+
+Kind: `function`
+Module: `src/features/automation/composition/createRenewalScheduler.ts`
+Source: `src/features/automation/composition/createRenewalScheduler.ts:13:1`
+
+Compose the host renewal scheduler without exposing its concrete adapter to CLI commands.
+
+### Signatures
+
+- `(options: CreateRenewalSchedulerOptions) => RenewalSchedulerPort`
+  - options: `CreateRenewalSchedulerOptions`
+  - returns: `RenewalSchedulerPort`
 
 ## createSystemdRenewalScheduler
 
@@ -57,6 +139,18 @@ Create the systemd adapter that owns TLS renewal service and timer units.
 - `(options: CreateSystemdRenewalSchedulerOptions) => RenewalSchedulerPort`
   - options: `CreateSystemdRenewalSchedulerOptions`
   - returns: `RenewalSchedulerPort`
+
+## DeploymentHookPort
+
+Kind: `type`
+Module: `src/features/deployment/application/ports/outbound/deploymentHookPort.ts`
+Source: `src/features/deployment/application/ports/outbound/deploymentHookPort.ts:1:1`
+
+### Members
+
+| Name | Kind | Type | Required | Description |
+| --- | --- | --- | --- | --- |
+| runAsync | method | `(command: string) => Promise<void>` | yes |  |
 
 ## disableRenewalAutomationAsync
 
@@ -76,16 +170,44 @@ Disable periodic TLS renewal checks and remove scheduler-owned state.
 
 Kind: `function`
 Module: `src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts`
-Source: `src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts:4:1`
+Source: `src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts:5:1`
 
 Enable idempotent periodic TLS renewal checks through the configured scheduler.
 
 ### Signatures
 
-- `(scheduler: RenewalSchedulerPort, storageVolumeName: string) => Promise<void>`
+- `(scheduler: RenewalSchedulerPort, input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>`
+  - input: `{ readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }`
   - scheduler: `RenewalSchedulerPort`
-  - storageVolumeName: `string`
   - returns: `Promise<void>`
+
+## executeDeploymentHookAsync
+
+Kind: `function`
+Module: `src/features/deployment/composition/executeDeploymentHookAsync.ts`
+Source: `src/features/deployment/composition/executeDeploymentHookAsync.ts:13:1`
+
+Execute one explicit post-renewal host command through the deployment composition boundary.
+
+### Signatures
+
+- `(input: ExecuteDeploymentHookInput) => Promise<void>`
+  - input: `ExecuteDeploymentHookInput`
+  - returns: `Promise<void>`
+
+## inspectTlsConsumerAsync
+
+Kind: `function`
+Module: `src/features/consumers/composition/inspectTlsConsumerAsync.ts`
+Source: `src/features/consumers/composition/inspectTlsConsumerAsync.ts:18:1`
+
+Inspect one TLS consumer using the default host filesystem discovery adapter.
+
+### Signatures
+
+- `(input: InspectTlsConsumerInput) => Promise<TlsConsumerGuidance>`
+  - input: `InspectTlsConsumerInput`
+  - returns: `Promise<TlsConsumerGuidance>`
 
 ## issueCertificatesAsync
 
@@ -102,11 +224,25 @@ Issue one independently renewable certificate for every unique validated domain.
   - runtime: `CertificateRuntimePort`
   - returns: `Promise<void>`
 
+## isTlsConsumer
+
+Kind: `function`
+Module: `src/features/consumers/domain/tlsConsumer.ts`
+Source: `src/features/consumers/domain/tlsConsumer.ts:15:1`
+
+Narrow one CLI value to a supported TLS certificate consumer profile.
+
+### Signatures
+
+- `(value: string) => boolean`
+  - value: `string`
+  - returns: `boolean`
+
 ## provider
 
 Kind: `value`
 Module: `src/cli/index.ts`
-Source: `src/cli/index.ts:59:7`
+Source: `src/cli/index.ts:62:7`
 
 ## readCertificateStatusAsync
 
@@ -140,7 +276,7 @@ Read scheduler state without mutating renewal automation.
 
 Kind: `function`
 Module: `src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts`
-Source: `src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts:7:1`
+Source: `src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts:11:1`
 
 Render deterministic systemd service and timer units for daily TLS renewal checks.
 
@@ -154,7 +290,7 @@ Render deterministic systemd service and timer units for daily TLS renewal check
 
 Kind: `type`
 Module: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts`
-Source: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts:1:1`
+Source: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts:3:1`
 
 ### Members
 
@@ -168,30 +304,85 @@ Source: `src/features/automation/application/ports/outbound/renewalSchedulerPort
 
 Kind: `type`
 Module: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts`
-Source: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts:7:1`
+Source: `src/features/automation/application/ports/outbound/renewalSchedulerPort.ts:9:1`
 
 ### Members
 
 | Name | Kind | Type | Required | Description |
 | --- | --- | --- | --- | --- |
 | disableAsync | method | `() => Promise<void>` | yes |  |
-| enableAsync | method | `(input: { readonly storageVolumeName: string; }) => Promise<void>` | yes |  |
+| enableAsync | method | `(input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>` | yes |  |
 | statusAsync | method | `() => Promise<RenewalAutomationStatus>` | yes |  |
 
 ## renewCertificatesAsync
 
 Kind: `function`
 Module: `src/features/certificates/application/use-cases/renewCertificatesAsync.ts`
-Source: `src/features/certificates/application/use-cases/renewCertificatesAsync.ts:4:1`
+Source: `src/features/certificates/application/use-cases/renewCertificatesAsync.ts:5:1`
 
 Renew all due certificates using the runtime's persisted renewal configuration.
 
 ### Signatures
 
-- `(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<void>`
+- `(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<CertificateRenewalResult>`
   - input: `{ readonly dryRun?: boolean; }` (optional)
   - runtime: `CertificateRuntimePort`
+  - returns: `Promise<CertificateRenewalResult>`
+
+## resolveCertificateStorage
+
+Kind: `function`
+Module: `src/features/certificates/composition/resolveCertificateStorage.ts`
+Source: `src/features/certificates/composition/resolveCertificateStorage.ts:6:1`
+
+Resolve the host-owned certificate storage tree from an explicit root directory.
+
+### Signatures
+
+- `(rootDirectory: string) => CertificateStoragePaths`
+  - rootDirectory: `string`
+  - returns: `CertificateStoragePaths`
+
+## ResolvedCertificateRuntime
+
+Kind: `type`
+Module: `src/types/certificates.ts`
+Source: `src/types/certificates.ts:18:1`
+
+### Members
+
+| Name | Kind | Type | Required | Description |
+| --- | --- | --- | --- | --- |
+| kind | property | `CertificateRuntimeKind` | yes |  |
+| runtime | property | `CertificateRuntimePort` | yes |  |
+| storage | property | `CertificateStoragePaths` | yes |  |
+
+## runDeploymentHookAsync
+
+Kind: `function`
+Module: `src/features/deployment/application/use-cases/runDeploymentHookAsync.ts`
+Source: `src/features/deployment/application/use-cases/runDeploymentHookAsync.ts:4:1`
+
+Run one explicit host deployment command after certificate files actually change.
+
+### Signatures
+
+- `(hook: DeploymentHookPort, command: string) => Promise<void>`
+  - command: `string`
+  - hook: `DeploymentHookPort`
   - returns: `Promise<void>`
+
+## TLS_CONSUMERS
+
+Kind: `value`
+Module: `src/features/consumers/domain/tlsConsumer.ts`
+Source: `src/features/consumers/domain/tlsConsumer.ts:1:14`
+
+## TlsConsumer
+
+Kind: `unknown`
+Module: `src/features/consumers/domain/tlsConsumer.ts`
+Source: `src/features/consumers/domain/tlsConsumer.ts:12:1`
 
 ## TlsPreflightCheck
 

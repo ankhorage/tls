@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant participant_createShellDeploymentHook as createShellDeploymentHook
+  participant participant_executeDeploymentHookAsync as executeDeploymentHookAsync
+  participant participant_runAsync as runAsync
+  participant participant_runCheckedProcessAsync as runCheckedProcessAsync
+  participant participant_runDeploymentHookAsync as runDeploymentHookAsync
+  participant participant_runProcessAsync as runProcessAsync
+  participant_executeDeploymentHookAsync->>participant_createShellDeploymentHook: createShellDeploymentHook()
+  participant_createShellDeploymentHook-->>participant_executeDeploymentHookAsync: return
+  participant_executeDeploymentHookAsync->>participant_runDeploymentHookAsync: runDeploymentHookAsync()
+  participant_runDeploymentHookAsync->>participant_runAsync: hook.runAsync()
+  participant_runAsync->>participant_runCheckedProcessAsync: runCheckedProcessAsync()
+  participant_runCheckedProcessAsync->>participant_runProcessAsync: runProcessAsync()
+  participant_runProcessAsync-->>participant_runCheckedProcessAsync: return
+  participant_runCheckedProcessAsync-->>participant_runAsync: return
+  participant_runAsync-->>participant_runDeploymentHookAsync: return
+  participant_runDeploymentHookAsync-->>participant_executeDeploymentHookAsync: return

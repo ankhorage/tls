@@ -6,6 +6,9 @@ graph LR
   module_src_cli_commands_renew_ts["src/cli/commands/renew.ts"]
   module_src_cli_commands_status_ts["src/cli/commands/status.ts"]
   module_src_cli_index_ts["src/cli/index.ts"]
+  module_src_cli_utils_parseTlsConsumerOptions_ts["src/cli/utils/parseTlsConsumerOptions.ts"]
+  module_src_cli_utils_parseTlsDeploymentOptions_ts["src/cli/utils/parseTlsDeploymentOptions.ts"]
+  module_src_cli_utils_parseTlsRuntimeOptions_ts["src/cli/utils/parseTlsRuntimeOptions.ts"]
   module_src_features_automation_adapters_outbound_systemd_createSystemdRenewalScheduler_ts["src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts"]
   module_src_features_automation_adapters_outbound_systemd_renderSystemdRenewalUnits_test_ts["src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"]
   module_src_features_automation_adapters_outbound_systemd_renderSystemdRenewalUnits_ts["src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"]
@@ -13,8 +16,9 @@ graph LR
   module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts["src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"]
   module_src_features_automation_application_use_cases_enableRenewalAutomationAsync_ts["src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"]
   module_src_features_automation_application_use_cases_readRenewalAutomationStatusAsync_ts["src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"]
+  module_src_features_automation_composition_createRenewalScheduler_ts["src/features/automation/composition/createRenewalScheduler.ts"]
   module_src_features_certificates_adapters_outbound_docker_createDockerCertbotRuntime_ts["src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"]
-  module_src_features_certificates_adapters_outbound_docker_runDockerTlsPreflightAsync_ts["src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"]
+  module_src_features_certificates_adapters_outbound_native_createNativeCertbotRuntime_ts["src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"]
   module_src_features_certificates_application_ports_outbound_certificateRuntimePort_ts["src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"]
   module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_test_ts["src/features/certificates/application/use-cases/checkIssueReadinessAsync.test.ts"]
   module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_ts["src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts"]
@@ -22,35 +26,78 @@ graph LR
   module_src_features_certificates_application_use_cases_issueCertificatesAsync_ts["src/features/certificates/application/use-cases/issueCertificatesAsync.ts"]
   module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts["src/features/certificates/application/use-cases/readCertificateStatusAsync.ts"]
   module_src_features_certificates_application_use_cases_renewCertificatesAsync_ts["src/features/certificates/application/use-cases/renewCertificatesAsync.ts"]
+  module_src_features_certificates_composition_createCertificateRuntimeAsync_test_ts["src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"]
+  module_src_features_certificates_composition_createCertificateRuntimeAsync_ts["src/features/certificates/composition/createCertificateRuntimeAsync.ts"]
+  module_src_features_certificates_composition_resolveCertificateStorage_ts["src/features/certificates/composition/resolveCertificateStorage.ts"]
   module_src_features_certificates_constants_certbot_ts["src/features/certificates/constants/certbot.ts"]
   module_src_features_certificates_domain_isHttp01Domain_ts["src/features/certificates/domain/isHttp01Domain.ts"]
+  module_src_features_certificates_utils_prepareCertificateStorageAsync_ts["src/features/certificates/utils/prepareCertificateStorageAsync.ts"]
+  module_src_features_certificates_utils_readCertificateStateStampAsync_ts["src/features/certificates/utils/readCertificateStateStampAsync.ts"]
+  module_src_features_certificates_utils_runHttp01PreflightAsync_ts["src/features/certificates/utils/runHttp01PreflightAsync.ts"]
+  module_src_features_consumers_adapters_outbound_node_createNodeConsumerConfigDiscovery_ts["src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts"]
+  module_src_features_consumers_application_ports_outbound_consumerConfigDiscoveryPort_ts["src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts"]
+  module_src_features_consumers_application_use_cases_buildTlsConsumerGuidanceAsync_ts["src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"]
+  module_src_features_consumers_composition_inspectTlsConsumerAsync_ts["src/features/consumers/composition/inspectTlsConsumerAsync.ts"]
+  module_src_features_consumers_domain_tlsConsumer_ts["src/features/consumers/domain/tlsConsumer.ts"]
+  module_src_features_deployment_adapters_outbound_shell_createShellDeploymentHook_ts["src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"]
+  module_src_features_deployment_application_ports_outbound_deploymentHookPort_ts["src/features/deployment/application/ports/outbound/deploymentHookPort.ts"]
+  module_src_features_deployment_application_use_cases_runDeploymentHookAsync_ts["src/features/deployment/application/use-cases/runDeploymentHookAsync.ts"]
+  module_src_features_deployment_composition_executeDeploymentHookAsync_ts["src/features/deployment/composition/executeDeploymentHookAsync.ts"]
   module_src_index_ts["src/index.ts"]
+  module_src_types_certificates_ts["src/types/certificates.ts"]
   module_src_types_preflight_ts["src/types/preflight.ts"]
   module_src_types_process_ts["src/types/process.ts"]
   module_src_utils_runCheckedProcessAsync_ts["src/utils/runCheckedProcessAsync.ts"]
   module_src_utils_runProcessAsync_ts["src/utils/runProcessAsync.ts"]
+  export_CertificateRenewalResult["CertificateRenewalResult"]
+  module_src_types_certificates_ts --> export_CertificateRenewalResult
+  export_CertificateRuntimeKind["CertificateRuntimeKind"]
+  module_src_types_certificates_ts --> export_CertificateRuntimeKind
   export_CertificateRuntimePort["CertificateRuntimePort"]
   module_src_features_certificates_application_ports_outbound_certificateRuntimePort_ts --> export_CertificateRuntimePort
+  export_CertificateRuntimePort -.-> export_CertificateRenewalResult
   export_CertificateRuntimePort -.-> export_TlsPreflightCheck
+  export_CertificateRuntimePreference["CertificateRuntimePreference"]
+  module_src_types_certificates_ts --> export_CertificateRuntimePreference
+  export_CertificateStoragePaths["CertificateStoragePaths"]
+  module_src_types_certificates_ts --> export_CertificateStoragePaths
   export_checkIssueReadinessAsync["checkIssueReadinessAsync"]
   module_src_features_certificates_application_use_cases_checkIssueReadinessAsync_ts --> export_checkIssueReadinessAsync
   export_checkIssueReadinessAsync -.-> export_CertificateRuntimePort
   export_checkIssueReadinessAsync -.-> export_TlsPreflightCheck
+  export_createCertificateRuntimeAsync["createCertificateRuntimeAsync"]
+  module_src_features_certificates_composition_createCertificateRuntimeAsync_ts --> export_createCertificateRuntimeAsync
+  export_createCertificateRuntimeAsync -.-> export_ResolvedCertificateRuntime
   export_createDockerCertbotRuntime["createDockerCertbotRuntime"]
   module_src_features_certificates_adapters_outbound_docker_createDockerCertbotRuntime_ts --> export_createDockerCertbotRuntime
   export_createDockerCertbotRuntime -.-> export_CertificateRuntimePort
+  export_createNativeCertbotRuntime["createNativeCertbotRuntime"]
+  module_src_features_certificates_adapters_outbound_native_createNativeCertbotRuntime_ts --> export_createNativeCertbotRuntime
+  export_createNativeCertbotRuntime -.-> export_CertificateRuntimePort
+  export_createRenewalScheduler["createRenewalScheduler"]
+  module_src_features_automation_composition_createRenewalScheduler_ts --> export_createRenewalScheduler
+  export_createRenewalScheduler -.-> export_RenewalSchedulerPort
   export_createSystemdRenewalScheduler["createSystemdRenewalScheduler"]
   module_src_features_automation_adapters_outbound_systemd_createSystemdRenewalScheduler_ts --> export_createSystemdRenewalScheduler
   export_createSystemdRenewalScheduler -.-> export_RenewalSchedulerPort
+  export_DeploymentHookPort["DeploymentHookPort"]
+  module_src_features_deployment_application_ports_outbound_deploymentHookPort_ts --> export_DeploymentHookPort
   export_disableRenewalAutomationAsync["disableRenewalAutomationAsync"]
   module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts --> export_disableRenewalAutomationAsync
   export_disableRenewalAutomationAsync -.-> export_RenewalSchedulerPort
   export_enableRenewalAutomationAsync["enableRenewalAutomationAsync"]
   module_src_features_automation_application_use_cases_enableRenewalAutomationAsync_ts --> export_enableRenewalAutomationAsync
+  export_enableRenewalAutomationAsync -.-> export_CertificateRuntimePreference
   export_enableRenewalAutomationAsync -.-> export_RenewalSchedulerPort
+  export_executeDeploymentHookAsync["executeDeploymentHookAsync"]
+  module_src_features_deployment_composition_executeDeploymentHookAsync_ts --> export_executeDeploymentHookAsync
+  export_inspectTlsConsumerAsync["inspectTlsConsumerAsync"]
+  module_src_features_consumers_composition_inspectTlsConsumerAsync_ts --> export_inspectTlsConsumerAsync
   export_issueCertificatesAsync["issueCertificatesAsync"]
   module_src_features_certificates_application_use_cases_issueCertificatesAsync_ts --> export_issueCertificatesAsync
   export_issueCertificatesAsync -.-> export_CertificateRuntimePort
+  export_isTlsConsumer["isTlsConsumer"]
+  module_src_features_consumers_domain_tlsConsumer_ts --> export_isTlsConsumer
   export_provider["provider"]
   module_src_cli_index_ts --> export_provider
   export_readCertificateStatusAsync["readCertificateStatusAsync"]
@@ -66,9 +113,26 @@ graph LR
   module_src_features_automation_application_ports_outbound_renewalSchedulerPort_ts --> export_RenewalAutomationStatus
   export_RenewalSchedulerPort["RenewalSchedulerPort"]
   module_src_features_automation_application_ports_outbound_renewalSchedulerPort_ts --> export_RenewalSchedulerPort
+  export_RenewalSchedulerPort -.-> export_CertificateRuntimePreference
   export_RenewalSchedulerPort -.-> export_RenewalAutomationStatus
   export_renewCertificatesAsync["renewCertificatesAsync"]
   module_src_features_certificates_application_use_cases_renewCertificatesAsync_ts --> export_renewCertificatesAsync
+  export_renewCertificatesAsync -.-> export_CertificateRenewalResult
   export_renewCertificatesAsync -.-> export_CertificateRuntimePort
+  export_resolveCertificateStorage["resolveCertificateStorage"]
+  module_src_features_certificates_composition_resolveCertificateStorage_ts --> export_resolveCertificateStorage
+  export_resolveCertificateStorage -.-> export_CertificateStoragePaths
+  export_ResolvedCertificateRuntime["ResolvedCertificateRuntime"]
+  module_src_types_certificates_ts --> export_ResolvedCertificateRuntime
+  export_ResolvedCertificateRuntime -.-> export_CertificateRuntimeKind
+  export_ResolvedCertificateRuntime -.-> export_CertificateRuntimePort
+  export_ResolvedCertificateRuntime -.-> export_CertificateStoragePaths
+  export_runDeploymentHookAsync["runDeploymentHookAsync"]
+  module_src_features_deployment_application_use_cases_runDeploymentHookAsync_ts --> export_runDeploymentHookAsync
+  export_runDeploymentHookAsync -.-> export_DeploymentHookPort
+  export_TLS_CONSUMERS["TLS_CONSUMERS"]
+  module_src_features_consumers_domain_tlsConsumer_ts --> export_TLS_CONSUMERS
+  export_TlsConsumer["TlsConsumer"]
+  module_src_features_consumers_domain_tlsConsumer_ts --> export_TlsConsumer
   export_TlsPreflightCheck["TlsPreflightCheck"]
   module_src_types_preflight_ts --> export_TlsPreflightCheck

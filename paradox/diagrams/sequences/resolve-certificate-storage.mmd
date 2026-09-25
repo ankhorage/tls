@@ -1,0 +1,5 @@
+sequenceDiagram
+  participant participant_resolve as resolve
+  participant participant_resolveCertificateStorage as resolveCertificateStorage
+  participant_resolveCertificateStorage->>participant_resolve: resolve()
+  participant_resolve-->>participant_resolveCertificateStorage: return

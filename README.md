@@ -3,31 +3,33 @@
 
 # @ankhorage/tls
 
-![license: MIT](./paradox/badges/license.svg) ![npm: v0.1.0](./paradox/badges/npm.svg) ![runtime: bun](./paradox/badges/runtime.svg) ![typescript: strict](./paradox/badges/typescript.svg) ![eslint: checked](./paradox/badges/eslint.svg) ![prettier: checked](./paradox/badges/prettier.svg) ![build: checked](./paradox/badges/build.svg) ![tests: checked](./paradox/badges/tests.svg) ![docs: paradox](./paradox/badges/docs.svg)
+![license: MIT](./paradox/badges/license.svg) ![npm: v0.2.0](./paradox/badges/npm.svg) ![runtime: bun](./paradox/badges/runtime.svg) ![typescript: strict](./paradox/badges/typescript.svg) ![eslint: checked](./paradox/badges/eslint.svg) ![prettier: checked](./paradox/badges/prettier.svg) ![build: checked](./paradox/badges/build.svg) ![tests: checked](./paradox/badges/tests.svg) ![docs: paradox](./paradox/badges/docs.svg)
 
 Provider-agnostic TLS certificate lifecycle and automation.
 
 ## Usage
 
-### Issue a certificate after HTTP-01 readiness succeeds
+### Issue a certificate with automatically selected Certbot runtime
 
-The certificate lifecycle stays provider-agnostic. This example composes the built-in Docker
-Certbot adapter, runs the same readiness checks used by `ankh tls issue`, and issues only when
-every prerequisite passes.
+TLS owns host-based certificate storage and does not require Docker. Runtime selection prefers
+native Certbot and falls back to the Docker adapter when available. The same storage tree and
+HTTP-01 contract can be consumed by any web server through explicit configuration.
 
 Source: `examples/basic-usage/index.ts`
 
 ```ts
 import {
   checkIssueReadinessAsync,
-  createDockerCertbotRuntime,
+  createCertificateRuntimeAsync,
   issueCertificatesAsync,
 } from '@ankhorage/tls';
 
-const runtime = createDockerCertbotRuntime({
-  storageVolumeName: 'tls-state',
+const { runtime, storage } = await createCertificateRuntimeAsync({
+  storageDirectory: '.ankh-tls',
 });
 const domains = ['app.example.com'];
+
+console.log(`Serve HTTP-01 challenges from ${storage.webrootDirectory}`);
 const checks = await checkIssueReadinessAsync(runtime, domains);
 
 if (checks.some(({ status }) => status === 'fail')) {
@@ -49,7 +51,8 @@ if (checks.some(({ status }) => status === 'fail')) {
 - [Architecture overview](./paradox/diagrams/architecture-overview.mmd)
 - [Module relationships](./paradox/diagrams/module-relationships.mmd)
 - [Export graph](./paradox/diagrams/export-graph.mmd)
+- [createRenewalScheduler sequence](./paradox/diagrams/sequences/create-renewal-scheduler.mmd)
 - [disableRenewalAutomationAsync sequence](./paradox/diagrams/sequences/disable-renewal-automation-async.mmd)
-- [issueCertificatesAsync sequence](./paradox/diagrams/sequences/issue-certificates-async.mmd)
-- [renderSystemdRenewalUnits sequence](./paradox/diagrams/sequences/render-systemd-renewal-units.mmd)
-- [renewCertificatesAsync sequence](./paradox/diagrams/sequences/renew-certificates-async.mmd)
+- [executeDeploymentHookAsync sequence](./paradox/diagrams/sequences/execute-deployment-hook-async.mmd)
+- [resolveCertificateStorage sequence](./paradox/diagrams/sequences/resolve-certificate-storage.mmd)
+- [runDeploymentHookAsync sequence](./paradox/diagrams/sequences/run-deployment-hook-async.mmd)

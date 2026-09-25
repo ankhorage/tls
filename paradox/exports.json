@@ -1,5 +1,53 @@
 [
   {
+    "name": "CertificateRenewalResult",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/types/certificates.ts",
+    "sourceLocation": {
+      "filePath": "src/types/certificates.ts",
+      "line": 6,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [
+      {
+        "name": "renewed",
+        "kind": "property",
+        "type": "boolean",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "CertificateRuntimeKind",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "unknown",
+    "modulePath": "src/types/certificates.ts",
+    "sourceLocation": {
+      "filePath": "src/types/certificates.ts",
+      "line": 3,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [],
+    "structuredRows": []
+  },
+  {
     "name": "CertificateRuntimePort",
     "description": null,
     "isReadme": false,
@@ -8,13 +56,14 @@
     "modulePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
     "sourceLocation": {
       "filePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
-      "line": 3,
+      "line": 4,
       "column": 1
     },
     "exportPaths": [
       "src/index.ts"
     ],
     "relatedSymbols": [
+      "CertificateRenewalResult",
       "TlsPreflightCheck"
     ],
     "signatures": [],
@@ -36,7 +85,7 @@
       {
         "name": "renewAsync",
         "kind": "method",
-        "type": "(input: { readonly dryRun: boolean; }) => Promise<void>",
+        "type": "(input: { readonly dryRun: boolean; }) => Promise<CertificateRenewalResult>",
         "required": true,
         "description": null
       },
@@ -44,6 +93,82 @@
         "name": "statusAsync",
         "kind": "method",
         "type": "() => Promise<string>",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "CertificateRuntimePreference",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "unknown",
+    "modulePath": "src/types/certificates.ts",
+    "sourceLocation": {
+      "filePath": "src/types/certificates.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "CertificateStoragePaths",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/types/certificates.ts",
+    "sourceLocation": {
+      "filePath": "src/types/certificates.ts",
+      "line": 10,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [
+      {
+        "name": "configDirectory",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "logsDirectory",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "rootDirectory",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "webrootDirectory",
+        "kind": "property",
+        "type": "string",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "workDirectory",
+        "kind": "property",
+        "type": "string",
         "required": true,
         "description": null
       }
@@ -94,15 +219,51 @@
     "structuredRows": []
   },
   {
+    "name": "createCertificateRuntimeAsync",
+    "description": "Select a usable certificate runtime without making Docker a package prerequisite.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+      "line": 30,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "ResolvedCertificateRuntime"
+    ],
+    "signatures": [
+      {
+        "label": "(options: CreateCertificateRuntimeOptions) => Promise<ResolvedCertificateRuntime>",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "CreateCertificateRuntimeOptions",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<ResolvedCertificateRuntime>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
     "name": "createDockerCertbotRuntime",
-    "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+    "description": "Create a Docker-backed Certbot adapter over host-owned certificate storage.",
     "isReadme": false,
     "examples": [],
     "kind": "function",
     "modulePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
     "sourceLocation": {
       "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-      "line": 23,
+      "line": 28,
       "column": 1
     },
     "exportPaths": [
@@ -113,16 +274,88 @@
     ],
     "signatures": [
       {
-        "label": "(options?: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
+        "label": "(options: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
         "parameters": [
           {
             "name": "options",
             "type": "CreateDockerCertbotRuntimeOptions",
-            "required": false,
+            "required": true,
             "description": null
           }
         ],
         "returnType": "CertificateRuntimePort",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "createNativeCertbotRuntime",
+    "description": "Create a native Certbot adapter over host-owned certificate storage.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+      "line": 19,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimePort"
+    ],
+    "signatures": [
+      {
+        "label": "(options: CreateNativeCertbotRuntimeOptions) => CertificateRuntimePort",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "CreateNativeCertbotRuntimeOptions",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "CertificateRuntimePort",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "createRenewalScheduler",
+    "description": "Compose the host renewal scheduler without exposing its concrete adapter to CLI commands.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/automation/composition/createRenewalScheduler.ts",
+    "sourceLocation": {
+      "filePath": "src/features/automation/composition/createRenewalScheduler.ts",
+      "line": 13,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "RenewalSchedulerPort"
+    ],
+    "signatures": [
+      {
+        "label": "(options: CreateRenewalSchedulerOptions) => RenewalSchedulerPort",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "CreateRenewalSchedulerOptions",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "RenewalSchedulerPort",
         "returnDescription": null
       }
     ],
@@ -163,6 +396,34 @@
       }
     ],
     "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "DeploymentHookPort",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+    "sourceLocation": {
+      "filePath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+      "line": 1,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [
+      {
+        "name": "runAsync",
+        "kind": "method",
+        "type": "(command: string) => Promise<void>",
+        "required": true,
+        "description": null
+      }
+    ],
     "structuredRows": []
   },
   {
@@ -210,33 +471,102 @@
     "modulePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
     "sourceLocation": {
       "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
-      "line": 4,
+      "line": 5,
       "column": 1
     },
     "exportPaths": [
       "src/index.ts"
     ],
     "relatedSymbols": [
+      "CertificateRuntimePreference",
       "RenewalSchedulerPort"
     ],
     "signatures": [
       {
-        "label": "(scheduler: RenewalSchedulerPort, storageVolumeName: string) => Promise<void>",
+        "label": "(scheduler: RenewalSchedulerPort, input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>",
         "parameters": [
+          {
+            "name": "input",
+            "type": "{ readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }",
+            "required": true,
+            "description": null
+          },
           {
             "name": "scheduler",
             "type": "RenewalSchedulerPort",
             "required": true,
             "description": null
-          },
+          }
+        ],
+        "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "executeDeploymentHookAsync",
+    "description": "Execute one explicit post-renewal host command through the deployment composition boundary.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+      "line": 13,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [
+      {
+        "label": "(input: ExecuteDeploymentHookInput) => Promise<void>",
+        "parameters": [
           {
-            "name": "storageVolumeName",
-            "type": "string",
+            "name": "input",
+            "type": "ExecuteDeploymentHookInput",
             "required": true,
             "description": null
           }
         ],
         "returnType": "Promise<void>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "inspectTlsConsumerAsync",
+    "description": "Inspect one TLS consumer using the default host filesystem discovery adapter.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+      "line": 18,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [
+      {
+        "label": "(input: InspectTlsConsumerInput) => Promise<TlsConsumerGuidance>",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "InspectTlsConsumerInput",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "Promise<TlsConsumerGuidance>",
         "returnDescription": null
       }
     ],
@@ -286,6 +616,40 @@
     "structuredRows": []
   },
   {
+    "name": "isTlsConsumer",
+    "description": "Narrow one CLI value to a supported TLS certificate consumer profile.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+    "sourceLocation": {
+      "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "line": 15,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [
+      {
+        "label": "(value: string) => boolean",
+        "parameters": [
+          {
+            "name": "value",
+            "type": "string",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "boolean",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
     "name": "provider",
     "description": null,
     "isReadme": false,
@@ -294,7 +658,7 @@
     "modulePath": "src/cli/index.ts",
     "sourceLocation": {
       "filePath": "src/cli/index.ts",
-      "line": 59,
+      "line": 62,
       "column": 7
     },
     "exportPaths": [
@@ -387,7 +751,7 @@
     "modulePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
     "sourceLocation": {
       "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
-      "line": 7,
+      "line": 11,
       "column": 1
     },
     "exportPaths": [
@@ -421,7 +785,7 @@
     "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
     "sourceLocation": {
       "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
-      "line": 1,
+      "line": 3,
       "column": 1
     },
     "exportPaths": [
@@ -463,13 +827,14 @@
     "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
     "sourceLocation": {
       "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
-      "line": 7,
+      "line": 9,
       "column": 1
     },
     "exportPaths": [
       "src/index.ts"
     ],
     "relatedSymbols": [
+      "CertificateRuntimePreference",
       "RenewalAutomationStatus"
     ],
     "signatures": [],
@@ -484,7 +849,7 @@
       {
         "name": "enableAsync",
         "kind": "method",
-        "type": "(input: { readonly storageVolumeName: string; }) => Promise<void>",
+        "type": "(input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>",
         "required": true,
         "description": null
       },
@@ -507,18 +872,19 @@
     "modulePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
     "sourceLocation": {
       "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
-      "line": 4,
+      "line": 5,
       "column": 1
     },
     "exportPaths": [
       "src/index.ts"
     ],
     "relatedSymbols": [
+      "CertificateRenewalResult",
       "CertificateRuntimePort"
     ],
     "signatures": [
       {
-        "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<void>",
+        "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<CertificateRenewalResult>",
         "parameters": [
           {
             "name": "input",
@@ -533,10 +899,174 @@
             "description": null
           }
         ],
+        "returnType": "Promise<CertificateRenewalResult>",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "resolveCertificateStorage",
+    "description": "Resolve the host-owned certificate storage tree from an explicit root directory.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+    "sourceLocation": {
+      "filePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+      "line": 6,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateStoragePaths"
+    ],
+    "signatures": [
+      {
+        "label": "(rootDirectory: string) => CertificateStoragePaths",
+        "parameters": [
+          {
+            "name": "rootDirectory",
+            "type": "string",
+            "required": true,
+            "description": null
+          }
+        ],
+        "returnType": "CertificateStoragePaths",
+        "returnDescription": null
+      }
+    ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "ResolvedCertificateRuntime",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "type",
+    "modulePath": "src/types/certificates.ts",
+    "sourceLocation": {
+      "filePath": "src/types/certificates.ts",
+      "line": 18,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "CertificateRuntimeKind",
+      "CertificateRuntimePort",
+      "CertificateStoragePaths"
+    ],
+    "signatures": [],
+    "members": [
+      {
+        "name": "kind",
+        "kind": "property",
+        "type": "CertificateRuntimeKind",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "runtime",
+        "kind": "property",
+        "type": "CertificateRuntimePort",
+        "required": true,
+        "description": null
+      },
+      {
+        "name": "storage",
+        "kind": "property",
+        "type": "CertificateStoragePaths",
+        "required": true,
+        "description": null
+      }
+    ],
+    "structuredRows": []
+  },
+  {
+    "name": "runDeploymentHookAsync",
+    "description": "Run one explicit host deployment command after certificate files actually change.",
+    "isReadme": false,
+    "examples": [],
+    "kind": "function",
+    "modulePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+    "sourceLocation": {
+      "filePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+      "line": 4,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [
+      "DeploymentHookPort"
+    ],
+    "signatures": [
+      {
+        "label": "(hook: DeploymentHookPort, command: string) => Promise<void>",
+        "parameters": [
+          {
+            "name": "command",
+            "type": "string",
+            "required": true,
+            "description": null
+          },
+          {
+            "name": "hook",
+            "type": "DeploymentHookPort",
+            "required": true,
+            "description": null
+          }
+        ],
         "returnType": "Promise<void>",
         "returnDescription": null
       }
     ],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "TLS_CONSUMERS",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "value",
+    "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+    "sourceLocation": {
+      "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "line": 1,
+      "column": 14
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
+    "members": [],
+    "structuredRows": []
+  },
+  {
+    "name": "TlsConsumer",
+    "description": null,
+    "isReadme": false,
+    "examples": [],
+    "kind": "unknown",
+    "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+    "sourceLocation": {
+      "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "line": 12,
+      "column": 1
+    },
+    "exportPaths": [
+      "src/index.ts"
+    ],
+    "relatedSymbols": [],
+    "signatures": [],
     "members": [],
     "structuredRows": []
   },

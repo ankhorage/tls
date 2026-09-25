@@ -14,7 +14,7 @@
     {
       "id": "npm",
       "label": "npm",
-      "value": "v0.1.0",
+      "value": "v0.2.0",
       "color": "cb3837"
     },
     {
@@ -64,10 +64,10 @@
   "readmeUsageDescription": null,
   "readmeUsage": [
     {
-      "title": "Issue a certificate after HTTP-01 readiness succeeds",
-      "description": "Issue a certificate after HTTP-01 readiness succeeds\n\nThe certificate lifecycle stays provider-agnostic. This example composes the built-in Docker\nCertbot adapter, runs the same readiness checks used by `ankh tls issue`, and issues only when\nevery prerequisite passes.",
+      "title": "Issue a certificate with automatically selected Certbot runtime",
+      "description": "Issue a certificate with automatically selected Certbot runtime\n\nTLS owns host-based certificate storage and does not require Docker. Runtime selection prefers\nnative Certbot and falls back to the Docker adapter when available. The same storage tree and\nHTTP-01 contract can be consumed by any web server through explicit configuration.",
       "language": "ts",
-      "code": "import {\n  checkIssueReadinessAsync,\n  createDockerCertbotRuntime,\n  issueCertificatesAsync,\n} from '@ankhorage/tls';\n\nconst runtime = createDockerCertbotRuntime({\n  storageVolumeName: 'tls-state',\n});\nconst domains = ['app.example.com'];\nconst checks = await checkIssueReadinessAsync(runtime, domains);\n\nif (checks.some(({ status }) => status === 'fail')) {\n  console.error(checks);\n  process.exitCode = 1;\n} else {\n  await issueCertificatesAsync(runtime, {\n    domains,\n    email: 'admin@example.com',\n  });\n}",
+      "code": "import {\n  checkIssueReadinessAsync,\n  createCertificateRuntimeAsync,\n  issueCertificatesAsync,\n} from '@ankhorage/tls';\n\nconst { runtime, storage } = await createCertificateRuntimeAsync({\n  storageDirectory: '.ankh-tls',\n});\nconst domains = ['app.example.com'];\n\nconsole.log(`Serve HTTP-01 challenges from ${storage.webrootDirectory}`);\nconst checks = await checkIssueReadinessAsync(runtime, domains);\n\nif (checks.some(({ status }) => status === 'fail')) {\n  console.error(checks);\n  process.exitCode = 1;\n} else {\n  await issueCertificatesAsync(runtime, {\n    domains,\n    email: 'admin@example.com',\n  });\n}",
       "sourcePath": "examples/basic-usage/index.ts"
     }
   ],
@@ -83,8 +83,8 @@
       "path": "src/cli/commands/automation/disable.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+        "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
+        "src/features/automation/composition/createRenewalScheduler.ts"
       ],
       "exports": [
         "disable"
@@ -94,9 +94,10 @@
       "path": "src/cli/commands/automation/enable.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "src/cli/utils/parseTlsRuntimeOptions.ts",
         "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
-        "src/features/certificates/constants/certbot.ts"
+        "src/features/automation/composition/createRenewalScheduler.ts"
       ],
       "exports": [
         "enable"
@@ -106,8 +107,8 @@
       "path": "src/cli/commands/automation/status.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
+        "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts",
+        "src/features/automation/composition/createRenewalScheduler.ts"
       ],
       "exports": [
         "status"
@@ -117,10 +118,12 @@
       "path": "src/cli/commands/issue.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/cli/utils/parseTlsConsumerOptions.ts",
+        "src/cli/utils/parseTlsRuntimeOptions.ts",
         "src/features/certificates/application/use-cases/checkIssueReadinessAsync.ts",
         "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
-        "src/features/certificates/constants/certbot.ts",
+        "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
         "src/types/preflight.ts"
       ],
       "exports": [
@@ -131,9 +134,11 @@
       "path": "src/cli/commands/renew.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "src/cli/utils/parseTlsRuntimeOptions.ts",
         "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
-        "src/features/certificates/constants/certbot.ts"
+        "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "src/features/deployment/composition/executeDeploymentHookAsync.ts"
       ],
       "exports": [
         "renew"
@@ -143,9 +148,9 @@
       "path": "src/cli/commands/status.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/cli/utils/parseTlsRuntimeOptions.ts",
         "src/features/certificates/application/use-cases/readCertificateStatusAsync.ts",
-        "src/features/certificates/constants/certbot.ts"
+        "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
       ],
       "exports": [
         "status"
@@ -164,6 +169,35 @@
       ],
       "exports": [
         "default"
+      ]
+    },
+    {
+      "path": "src/cli/utils/parseTlsConsumerOptions.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/consumers/domain/tlsConsumer.ts"
+      ],
+      "exports": [
+        "parseTlsConsumerOptions"
+      ]
+    },
+    {
+      "path": "src/cli/utils/parseTlsDeploymentOptions.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "parseTlsDeploymentOptions"
+      ]
+    },
+    {
+      "path": "src/cli/utils/parseTlsRuntimeOptions.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/constants/certbot.ts",
+        "src/types/certificates.ts"
+      ],
+      "exports": [
+        "parseTlsRuntimeOptions"
       ]
     },
     {
@@ -191,7 +225,9 @@
     {
       "path": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
       "isEntrypoint": false,
-      "dependencies": [],
+      "dependencies": [
+        "src/types/certificates.ts"
+      ],
       "exports": [
         "renderSystemdRenewalUnits"
       ]
@@ -199,7 +235,9 @@
     {
       "path": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
       "isEntrypoint": false,
-      "dependencies": [],
+      "dependencies": [
+        "src/types/certificates.ts"
+      ],
       "exports": [
         "RenewalAutomationStatus",
         "RenewalSchedulerPort"
@@ -219,7 +257,8 @@
       "path": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "src/types/certificates.ts"
       ],
       "exports": [
         "enableRenewalAutomationAsync"
@@ -236,12 +275,28 @@
       ]
     },
     {
+      "path": "src/features/automation/composition/createRenewalScheduler.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "src/types/process.ts"
+      ],
+      "exports": [
+        "createRenewalScheduler"
+      ]
+    },
+    {
       "path": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
         "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
         "src/features/certificates/constants/certbot.ts",
+        "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "src/types/certificates.ts",
+        "src/types/preflight.ts",
         "src/types/process.ts",
         "src/utils/runCheckedProcessAsync.ts",
         "src/utils/runProcessAsync.ts"
@@ -251,21 +306,28 @@
       ]
     },
     {
-      "path": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+      "path": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/constants/certbot.ts",
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "src/types/certificates.ts",
         "src/types/preflight.ts",
-        "src/types/process.ts"
+        "src/types/process.ts",
+        "src/utils/runCheckedProcessAsync.ts",
+        "src/utils/runProcessAsync.ts"
       ],
       "exports": [
-        "runDockerTlsPreflightAsync"
+        "createNativeCertbotRuntime"
       ]
     },
     {
       "path": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
       "isEntrypoint": false,
       "dependencies": [
+        "src/types/certificates.ts",
         "src/types/preflight.ts"
       ],
       "exports": [
@@ -327,10 +389,45 @@
       "path": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
       "isEntrypoint": false,
       "dependencies": [
-        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "src/types/certificates.ts"
       ],
       "exports": [
         "renewCertificatesAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "src/types/process.ts"
+      ],
+      "exports": []
+    },
+    {
+      "path": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "src/types/certificates.ts",
+        "src/types/process.ts",
+        "src/utils/runProcessAsync.ts"
+      ],
+      "exports": [
+        "createCertificateRuntimeAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/composition/resolveCertificateStorage.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/types/certificates.ts"
+      ],
+      "exports": [
+        "resolveCertificateStorage"
       ]
     },
     {
@@ -338,12 +435,13 @@
       "isEntrypoint": false,
       "dependencies": [],
       "exports": [
-        "CERTBOT_CONFIG_DIR",
-        "CERTBOT_IMAGE",
-        "CERTBOT_LOGS_DIR",
-        "CERTBOT_STORAGE_VOLUME",
-        "CERTBOT_WEBROOT",
-        "CERTBOT_WORK_DIR"
+        "CERTBOT_CONTAINER_CONFIG_DIR",
+        "CERTBOT_CONTAINER_LOGS_DIR",
+        "CERTBOT_CONTAINER_ROOT",
+        "CERTBOT_CONTAINER_WEBROOT",
+        "CERTBOT_CONTAINER_WORK_DIR",
+        "CERTBOT_DEFAULT_STORAGE_DIRECTORY",
+        "CERTBOT_IMAGE"
       ]
     },
     {
@@ -355,24 +453,181 @@
       ]
     },
     {
+      "path": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/types/certificates.ts"
+      ],
+      "exports": [
+        "prepareCertificateStorageAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "readCertificateStateStampAsync"
+      ]
+    },
+    {
+      "path": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "src/types/certificates.ts",
+        "src/types/preflight.ts"
+      ],
+      "exports": [
+        "runHttp01PreflightAsync"
+      ]
+    },
+    {
+      "path": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts"
+      ],
+      "exports": [
+        "createNodeConsumerConfigDiscovery"
+      ]
+    },
+    {
+      "path": "src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "ConsumerConfigDiscoveryPort"
+      ]
+    },
+    {
+      "path": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts",
+        "src/features/consumers/domain/tlsConsumer.ts",
+        "src/types/certificates.ts"
+      ],
+      "exports": [
+        "buildTlsConsumerGuidanceAsync",
+        "TlsConsumerGuidance"
+      ]
+    },
+    {
+      "path": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+        "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "src/features/consumers/domain/tlsConsumer.ts",
+        "src/types/certificates.ts"
+      ],
+      "exports": [
+        "inspectTlsConsumerAsync"
+      ]
+    },
+    {
+      "path": "src/features/consumers/domain/tlsConsumer.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "isTlsConsumer",
+        "TLS_CONSUMERS",
+        "TlsConsumer"
+      ]
+    },
+    {
+      "path": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+        "src/types/process.ts",
+        "src/utils/runCheckedProcessAsync.ts",
+        "src/utils/runProcessAsync.ts"
+      ],
+      "exports": [
+        "createShellDeploymentHook"
+      ]
+    },
+    {
+      "path": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "DeploymentHookPort"
+      ]
+    },
+    {
+      "path": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/deployment/application/ports/outbound/deploymentHookPort.ts"
+      ],
+      "exports": [
+        "runDeploymentHookAsync"
+      ]
+    },
+    {
+      "path": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "src/types/process.ts"
+      ],
+      "exports": [
+        "executeDeploymentHookAsync"
+      ]
+    },
+    {
       "path": "src/index.ts",
       "isEntrypoint": true,
       "dependencies": [],
       "exports": [
+        "CertificateRenewalResult",
+        "CertificateRuntimeKind",
         "CertificateRuntimePort",
+        "CertificateRuntimePreference",
+        "CertificateStoragePaths",
         "checkIssueReadinessAsync",
+        "createCertificateRuntimeAsync",
         "createDockerCertbotRuntime",
+        "createNativeCertbotRuntime",
+        "createRenewalScheduler",
         "createSystemdRenewalScheduler",
+        "DeploymentHookPort",
         "disableRenewalAutomationAsync",
         "enableRenewalAutomationAsync",
+        "executeDeploymentHookAsync",
+        "inspectTlsConsumerAsync",
         "issueCertificatesAsync",
+        "isTlsConsumer",
         "readCertificateStatusAsync",
         "readRenewalAutomationStatusAsync",
         "renderSystemdRenewalUnits",
         "RenewalAutomationStatus",
         "RenewalSchedulerPort",
         "renewCertificatesAsync",
+        "resolveCertificateStorage",
+        "ResolvedCertificateRuntime",
+        "runDeploymentHookAsync",
+        "TLS_CONSUMERS",
+        "TlsConsumer",
         "TlsPreflightCheck"
+      ]
+    },
+    {
+      "path": "src/types/certificates.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      ],
+      "exports": [
+        "CertificateRenewalResult",
+        "CertificateRuntimeKind",
+        "CertificateRuntimePreference",
+        "CertificateStoragePaths",
+        "ResolvedCertificateRuntime"
       ]
     },
     {
@@ -389,6 +644,7 @@
       "dependencies": [],
       "exports": [
         "ProcessResult",
+        "ProcessRunOptions",
         "RunProcessAsync"
       ]
     },
@@ -415,6 +671,54 @@
   ],
   "exports": [
     {
+      "name": "CertificateRenewalResult",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/types/certificates.ts",
+      "sourceLocation": {
+        "filePath": "src/types/certificates.ts",
+        "line": 6,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [
+        {
+          "name": "renewed",
+          "kind": "property",
+          "type": "boolean",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "CertificateRuntimeKind",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "unknown",
+      "modulePath": "src/types/certificates.ts",
+      "sourceLocation": {
+        "filePath": "src/types/certificates.ts",
+        "line": 3,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [],
+      "structuredRows": []
+    },
+    {
       "name": "CertificateRuntimePort",
       "description": null,
       "isReadme": false,
@@ -423,13 +727,14 @@
       "modulePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
       "sourceLocation": {
         "filePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
-        "line": 3,
+        "line": 4,
         "column": 1
       },
       "exportPaths": [
         "src/index.ts"
       ],
       "relatedSymbols": [
+        "CertificateRenewalResult",
         "TlsPreflightCheck"
       ],
       "signatures": [],
@@ -451,7 +756,7 @@
         {
           "name": "renewAsync",
           "kind": "method",
-          "type": "(input: { readonly dryRun: boolean; }) => Promise<void>",
+          "type": "(input: { readonly dryRun: boolean; }) => Promise<CertificateRenewalResult>",
           "required": true,
           "description": null
         },
@@ -459,6 +764,82 @@
           "name": "statusAsync",
           "kind": "method",
           "type": "() => Promise<string>",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "CertificateRuntimePreference",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "unknown",
+      "modulePath": "src/types/certificates.ts",
+      "sourceLocation": {
+        "filePath": "src/types/certificates.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "CertificateStoragePaths",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/types/certificates.ts",
+      "sourceLocation": {
+        "filePath": "src/types/certificates.ts",
+        "line": 10,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [
+        {
+          "name": "configDirectory",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "logsDirectory",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "rootDirectory",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "webrootDirectory",
+          "kind": "property",
+          "type": "string",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "workDirectory",
+          "kind": "property",
+          "type": "string",
           "required": true,
           "description": null
         }
@@ -509,15 +890,51 @@
       "structuredRows": []
     },
     {
+      "name": "createCertificateRuntimeAsync",
+      "description": "Select a usable certificate runtime without making Docker a package prerequisite.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 30,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "ResolvedCertificateRuntime"
+      ],
+      "signatures": [
+        {
+          "label": "(options: CreateCertificateRuntimeOptions) => Promise<ResolvedCertificateRuntime>",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "CreateCertificateRuntimeOptions",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<ResolvedCertificateRuntime>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
       "name": "createDockerCertbotRuntime",
-      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "description": "Create a Docker-backed Certbot adapter over host-owned certificate storage.",
       "isReadme": false,
       "examples": [],
       "kind": "function",
       "modulePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 23,
+        "line": 28,
         "column": 1
       },
       "exportPaths": [
@@ -528,16 +945,88 @@
       ],
       "signatures": [
         {
-          "label": "(options?: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
+          "label": "(options: CreateDockerCertbotRuntimeOptions) => CertificateRuntimePort",
           "parameters": [
             {
               "name": "options",
               "type": "CreateDockerCertbotRuntimeOptions",
-              "required": false,
+              "required": true,
               "description": null
             }
           ],
           "returnType": "CertificateRuntimePort",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "createNativeCertbotRuntime",
+      "description": "Create a native Certbot adapter over host-owned certificate storage.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 19,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimePort"
+      ],
+      "signatures": [
+        {
+          "label": "(options: CreateNativeCertbotRuntimeOptions) => CertificateRuntimePort",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "CreateNativeCertbotRuntimeOptions",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "CertificateRuntimePort",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "createRenewalScheduler",
+      "description": "Compose the host renewal scheduler without exposing its concrete adapter to CLI commands.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/automation/composition/createRenewalScheduler.ts",
+      "sourceLocation": {
+        "filePath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "line": 13,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "RenewalSchedulerPort"
+      ],
+      "signatures": [
+        {
+          "label": "(options: CreateRenewalSchedulerOptions) => RenewalSchedulerPort",
+          "parameters": [
+            {
+              "name": "options",
+              "type": "CreateRenewalSchedulerOptions",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "RenewalSchedulerPort",
           "returnDescription": null
         }
       ],
@@ -578,6 +1067,34 @@
         }
       ],
       "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "DeploymentHookPort",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+        "line": 1,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [
+        {
+          "name": "runAsync",
+          "kind": "method",
+          "type": "(command: string) => Promise<void>",
+          "required": true,
+          "description": null
+        }
+      ],
       "structuredRows": []
     },
     {
@@ -625,33 +1142,102 @@
       "modulePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
       "sourceLocation": {
         "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
-        "line": 4,
+        "line": 5,
         "column": 1
       },
       "exportPaths": [
         "src/index.ts"
       ],
       "relatedSymbols": [
+        "CertificateRuntimePreference",
         "RenewalSchedulerPort"
       ],
       "signatures": [
         {
-          "label": "(scheduler: RenewalSchedulerPort, storageVolumeName: string) => Promise<void>",
+          "label": "(scheduler: RenewalSchedulerPort, input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>",
           "parameters": [
+            {
+              "name": "input",
+              "type": "{ readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }",
+              "required": true,
+              "description": null
+            },
             {
               "name": "scheduler",
               "type": "RenewalSchedulerPort",
               "required": true,
               "description": null
-            },
+            }
+          ],
+          "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "executeDeploymentHookAsync",
+      "description": "Execute one explicit post-renewal host command through the deployment composition boundary.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "line": 13,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [
+        {
+          "label": "(input: ExecuteDeploymentHookInput) => Promise<void>",
+          "parameters": [
             {
-              "name": "storageVolumeName",
-              "type": "string",
+              "name": "input",
+              "type": "ExecuteDeploymentHookInput",
               "required": true,
               "description": null
             }
           ],
           "returnType": "Promise<void>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "inspectTlsConsumerAsync",
+      "description": "Inspect one TLS consumer using the default host filesystem discovery adapter.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "line": 18,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [
+        {
+          "label": "(input: InspectTlsConsumerInput) => Promise<TlsConsumerGuidance>",
+          "parameters": [
+            {
+              "name": "input",
+              "type": "InspectTlsConsumerInput",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "Promise<TlsConsumerGuidance>",
           "returnDescription": null
         }
       ],
@@ -701,6 +1287,40 @@
       "structuredRows": []
     },
     {
+      "name": "isTlsConsumer",
+      "description": "Narrow one CLI value to a supported TLS certificate consumer profile.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+        "line": 15,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [
+        {
+          "label": "(value: string) => boolean",
+          "parameters": [
+            {
+              "name": "value",
+              "type": "string",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "boolean",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
       "name": "provider",
       "description": null,
       "isReadme": false,
@@ -709,7 +1329,7 @@
       "modulePath": "src/cli/index.ts",
       "sourceLocation": {
         "filePath": "src/cli/index.ts",
-        "line": 59,
+        "line": 62,
         "column": 7
       },
       "exportPaths": [
@@ -802,7 +1422,7 @@
       "modulePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
       "sourceLocation": {
         "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
-        "line": 7,
+        "line": 11,
         "column": 1
       },
       "exportPaths": [
@@ -836,7 +1456,7 @@
       "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
       "sourceLocation": {
         "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
-        "line": 1,
+        "line": 3,
         "column": 1
       },
       "exportPaths": [
@@ -878,13 +1498,14 @@
       "modulePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
       "sourceLocation": {
         "filePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
-        "line": 7,
+        "line": 9,
         "column": 1
       },
       "exportPaths": [
         "src/index.ts"
       ],
       "relatedSymbols": [
+        "CertificateRuntimePreference",
         "RenewalAutomationStatus"
       ],
       "signatures": [],
@@ -899,7 +1520,7 @@
         {
           "name": "enableAsync",
           "kind": "method",
-          "type": "(input: { readonly storageVolumeName: string; }) => Promise<void>",
+          "type": "(input: { readonly deployCommand?: string; readonly runtimePreference: CertificateRuntimePreference; readonly storageDirectory: string; }) => Promise<void>",
           "required": true,
           "description": null
         },
@@ -922,18 +1543,19 @@
       "modulePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
       "sourceLocation": {
         "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
-        "line": 4,
+        "line": 5,
         "column": 1
       },
       "exportPaths": [
         "src/index.ts"
       ],
       "relatedSymbols": [
+        "CertificateRenewalResult",
         "CertificateRuntimePort"
       ],
       "signatures": [
         {
-          "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<void>",
+          "label": "(runtime: CertificateRuntimePort, input?: { readonly dryRun?: boolean; }) => Promise<CertificateRenewalResult>",
           "parameters": [
             {
               "name": "input",
@@ -948,10 +1570,174 @@
               "description": null
             }
           ],
+          "returnType": "Promise<CertificateRenewalResult>",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "resolveCertificateStorage",
+      "description": "Resolve the host-owned certificate storage tree from an explicit root directory.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "line": 6,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateStoragePaths"
+      ],
+      "signatures": [
+        {
+          "label": "(rootDirectory: string) => CertificateStoragePaths",
+          "parameters": [
+            {
+              "name": "rootDirectory",
+              "type": "string",
+              "required": true,
+              "description": null
+            }
+          ],
+          "returnType": "CertificateStoragePaths",
+          "returnDescription": null
+        }
+      ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "ResolvedCertificateRuntime",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "type",
+      "modulePath": "src/types/certificates.ts",
+      "sourceLocation": {
+        "filePath": "src/types/certificates.ts",
+        "line": 18,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "CertificateRuntimeKind",
+        "CertificateRuntimePort",
+        "CertificateStoragePaths"
+      ],
+      "signatures": [],
+      "members": [
+        {
+          "name": "kind",
+          "kind": "property",
+          "type": "CertificateRuntimeKind",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "runtime",
+          "kind": "property",
+          "type": "CertificateRuntimePort",
+          "required": true,
+          "description": null
+        },
+        {
+          "name": "storage",
+          "kind": "property",
+          "type": "CertificateStoragePaths",
+          "required": true,
+          "description": null
+        }
+      ],
+      "structuredRows": []
+    },
+    {
+      "name": "runDeploymentHookAsync",
+      "description": "Run one explicit host deployment command after certificate files actually change.",
+      "isReadme": false,
+      "examples": [],
+      "kind": "function",
+      "modulePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "line": 4,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [
+        "DeploymentHookPort"
+      ],
+      "signatures": [
+        {
+          "label": "(hook: DeploymentHookPort, command: string) => Promise<void>",
+          "parameters": [
+            {
+              "name": "command",
+              "type": "string",
+              "required": true,
+              "description": null
+            },
+            {
+              "name": "hook",
+              "type": "DeploymentHookPort",
+              "required": true,
+              "description": null
+            }
+          ],
           "returnType": "Promise<void>",
           "returnDescription": null
         }
       ],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "TLS_CONSUMERS",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "value",
+      "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+        "line": 1,
+        "column": 14
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
+      "members": [],
+      "structuredRows": []
+    },
+    {
+      "name": "TlsConsumer",
+      "description": null,
+      "isReadme": false,
+      "examples": [],
+      "kind": "unknown",
+      "modulePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+        "line": 12,
+        "column": 1
+      },
+      "exportPaths": [
+        "src/index.ts"
+      ],
+      "relatedSymbols": [],
+      "signatures": [],
       "members": [],
       "structuredRows": []
     },
@@ -1025,20 +1811,11 @@
     },
     {
       "name": "enable",
-      "description": "Enable daily persistent TLS renewal checks with the systemd scheduler adapter.",
+      "description": "Enable daily persistent TLS renewal checks through the scheduler composition boundary.",
       "sourceLocation": {
         "filePath": "src/cli/commands/automation/enable.ts",
-        "line": 8,
+        "line": 9,
         "column": 14
-      }
-    },
-    {
-      "name": "parseStorageVolume",
-      "description": "Parse the optional certificate-storage override.",
-      "sourceLocation": {
-        "filePath": "src/cli/commands/automation/enable.ts",
-        "line": 32,
-        "column": 1
       }
     },
     {
@@ -1055,16 +1832,16 @@
       "description": "Run readiness checks and issue certificates only when every prerequisite passes.",
       "sourceLocation": {
         "filePath": "src/cli/commands/issue.ts",
-        "line": 10,
+        "line": 12,
         "column": 14
       }
     },
     {
       "name": "parseIssueArguments",
-      "description": "Parse issue arguments while preserving domain order.",
+      "description": "Parse issue-specific arguments while preserving domain order.",
       "sourceLocation": {
         "filePath": "src/cli/commands/issue.ts",
-        "line": 54,
+        "line": 76,
         "column": 1
       }
     },
@@ -1073,7 +1850,7 @@
       "description": "Recursively consume issue tokens without mutable parser state.",
       "sourceLocation": {
         "filePath": "src/cli/commands/issue.ts",
-        "line": 72,
+        "line": 93,
         "column": 1
       }
     },
@@ -1082,7 +1859,7 @@
       "description": "Render the issue prerequisite checklist with actionable failure tips.",
       "sourceLocation": {
         "filePath": "src/cli/commands/issue.ts",
-        "line": 102,
+        "line": 118,
         "column": 1
       }
     },
@@ -1091,53 +1868,53 @@
       "description": "Convert an unknown failure to stable CLI text.",
       "sourceLocation": {
         "filePath": "src/cli/commands/issue.ts",
-        "line": 115,
+        "line": 131,
         "column": 1
       }
     },
     {
       "name": "renew",
-      "description": "Renew all due certificates from persistent Certbot state.",
+      "description": "Renew due certificates and run an explicit host deploy command only when files changed.",
       "sourceLocation": {
         "filePath": "src/cli/commands/renew.ts",
-        "line": 8,
+        "line": 10,
         "column": 14
       }
     },
     {
-      "name": "parseArguments",
-      "description": "Parse renewal flags without mutable parser state.",
+      "name": "runDeployHookIfNeededAsync",
+      "description": "Run one explicit deployment hook only when persisted certificate state changed.",
       "sourceLocation": {
         "filePath": "src/cli/commands/renew.ts",
-        "line": 33,
+        "line": 44,
         "column": 1
       }
     },
     {
-      "name": "parseTokens",
-      "description": "Recursively consume renewal tokens.",
+      "name": "renderRenewalResult",
+      "description": "Render a concise renewal result after Certbot and any deployment hook complete.",
       "sourceLocation": {
         "filePath": "src/cli/commands/renew.ts",
-        "line": 41,
+        "line": 62,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseArguments",
+      "description": "Parse renewal-specific flags after shared runtime and deployment options are removed.",
+      "sourceLocation": {
+        "filePath": "src/cli/commands/renew.ts",
+        "line": 70,
         "column": 1
       }
     },
     {
       "name": "status",
-      "description": "Show certificates known to the persistent certificate runtime.",
+      "description": "Show certificates known to the selected persistent certificate runtime.",
       "sourceLocation": {
         "filePath": "src/cli/commands/status.ts",
         "line": 8,
         "column": 14
-      }
-    },
-    {
-      "name": "parseStorageVolume",
-      "description": "Parse the optional Docker-backed storage override.",
-      "sourceLocation": {
-        "filePath": "src/cli/commands/status.ts",
-        "line": 23,
-        "column": 1
       }
     },
     {
@@ -1145,7 +1922,70 @@
       "description": "Read the installed TLS package version for the Ankh provider manifest.",
       "sourceLocation": {
         "filePath": "src/cli/index.ts",
-        "line": 78,
+        "line": 81,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTlsConsumerOptions",
+      "description": "Parse optional TLS consumer guidance flags without changing consumer configuration.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsConsumerOptions.ts",
+        "line": 10,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTokens",
+      "description": "Consume consumer flags recursively while preserving command-specific arguments.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsConsumerOptions.ts",
+        "line": 19,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTlsDeploymentOptions",
+      "description": "Parse an optional host deploy command while preserving command-specific arguments.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "line": 7,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTokens",
+      "description": "Consume the deployment flag recursively without mutable parser state.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "line": 12,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTlsRuntimeOptions",
+      "description": "Parse shared TLS runtime flags while preserving command-specific arguments.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "line": 13,
+        "column": 1
+      }
+    },
+    {
+      "name": "parseTokens",
+      "description": "Consume shared TLS runtime flags recursively without mutable parser state.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "line": 22,
+        "column": 1
+      }
+    },
+    {
+      "name": "isRuntimePreference",
+      "description": "Narrow one CLI value to a supported certificate runtime preference.",
+      "sourceLocation": {
+        "filePath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "line": 51,
         "column": 1
       }
     },
@@ -1163,7 +2003,7 @@
       "description": "Read one concise process status message.",
       "sourceLocation": {
         "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "line": 72,
+        "line": 74,
         "column": 1
       }
     },
@@ -1172,7 +2012,7 @@
       "description": "Reject systemd scheduling on non-Linux hosts with an actionable error.",
       "sourceLocation": {
         "filePath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "line": 77,
+        "line": 79,
         "column": 1
       }
     },
@@ -1181,16 +2021,7 @@
       "description": "Render deterministic systemd service and timer units for daily TLS renewal checks.",
       "sourceLocation": {
         "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
-        "line": 7,
-        "column": 1
-      }
-    },
-    {
-      "name": "validateStorageVolumeName",
-      "description": "Reject storage names that cannot safely cross CLI, Docker, and systemd boundaries.",
-      "sourceLocation": {
-        "filePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
-        "line": 53,
+        "line": 11,
         "column": 1
       }
     },
@@ -1217,7 +2048,7 @@
       "description": "Enable idempotent periodic TLS renewal checks through the configured scheduler.",
       "sourceLocation": {
         "filePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
-        "line": 4,
+        "line": 5,
         "column": 1
       }
     },
@@ -1231,17 +2062,26 @@
       }
     },
     {
+      "name": "createRenewalScheduler",
+      "description": "Compose the host renewal scheduler without exposing its concrete adapter to CLI commands.",
+      "sourceLocation": {
+        "filePath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "line": 13,
+        "column": 1
+      }
+    },
+    {
       "name": "createDockerCertbotRuntime",
-      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "description": "Create a Docker-backed Certbot adapter over host-owned certificate storage.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 23,
+        "line": 28,
         "column": 1
       }
     },
     {
       "name": "issueAsync",
-      "description": "Issue one HTTP-01 certificate with persistent Certbot state.",
+      "description": "Issue one HTTP-01 certificate with persistent host-owned Certbot state.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
         "line": 56,
@@ -1250,145 +2090,118 @@
     },
     {
       "name": "renewAsync",
-      "description": "Ask Certbot to renew only certificates whose persisted policy says they are due.",
+      "description": "Ask Docker Certbot to renew certificates according to persisted ACME state.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 86,
+        "line": 87,
         "column": 1
       }
     },
     {
       "name": "statusAsync",
-      "description": "Read Certbot's persisted certificate inventory.",
+      "description": "Read Docker Certbot's persisted certificate inventory.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 101,
+        "line": 109,
         "column": 1
       }
     },
     {
-      "name": "ensureStorageAsync",
-      "description": "Ensure all persistent Certbot directories exist in the configured storage volume.",
+      "name": "preflightAsync",
+      "description": "Verify Docker runtime availability plus the shared host HTTP-01 contract.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 113,
+        "line": 121,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeDockerAsync",
+      "description": "Probe Docker daemon access without coupling certificate storage to a Docker volume.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "line": 134,
         "column": 1
       }
     },
     {
       "name": "dockerPrefix",
-      "description": "Build the Docker run prefix shared by Certbot lifecycle commands.",
+      "description": "Build the Docker invocation prefix using a bind mount to host-owned TLS storage.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 133,
+        "line": 165,
         "column": 1
       }
     },
     {
       "name": "stateDirectoryArguments",
-      "description": "Build Certbot's persistent state-directory arguments.",
+      "description": "Build Certbot's container-local persistent state-directory arguments.",
       "sourceLocation": {
         "filePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "line": 145,
+        "line": 177,
         "column": 1
       }
     },
     {
-      "name": "runDockerTlsPreflightAsync",
-      "description": "Probe Docker, configured storage, DNS, port 80 routing, and the live HTTP-01 webroot.",
+      "name": "createNativeCertbotRuntime",
+      "description": "Create a native Certbot adapter over host-owned certificate storage.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 21,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 19,
         "column": 1
       }
     },
     {
-      "name": "finishHttp01PreflightAsync",
-      "description": "Finish the storage/webroot and HTTP roundtrip probes once Docker is available.",
+      "name": "issueAsync",
+      "description": "Issue one HTTP-01 certificate with native Certbot.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 55,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 45,
         "column": 1
       }
     },
     {
-      "name": "createBaseChecks",
-      "description": "Build concise Docker and configured-storage checklist entries.",
+      "name": "renewAsync",
+      "description": "Renew due certificates with native Certbot.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 81,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 75,
         "column": 1
       }
     },
     {
-      "name": "probeDnsAsync",
-      "description": "Resolve one hostname to prove public DNS exists before attempting ACME validation.",
+      "name": "statusAsync",
+      "description": "Read the native Certbot certificate inventory.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 105,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 92,
         "column": 1
       }
     },
     {
-      "name": "probeHttpAsync",
-      "description": "Fetch the exact token over HTTP to verify DNS, TCP/80, routing, and webroot ownership.",
+      "name": "preflightAsync",
+      "description": "Verify native Certbot availability plus the shared HTTP-01 contract.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 126,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 104,
         "column": 1
       }
     },
     {
-      "name": "writeChallengeAsync",
-      "description": "Write one temporary HTTP-01 token through the configured Docker storage volume.",
+      "name": "probeNativeCertbotAsync",
+      "description": "Probe whether native Certbot is executable on the current host.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 158,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 116,
         "column": 1
       }
     },
     {
-      "name": "removeChallengeAsync",
-      "description": "Remove the temporary readiness token after the HTTP roundtrip.",
+      "name": "stateDirectoryArguments",
+      "description": "Build native Certbot state-directory arguments.",
       "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 178,
-        "column": 1
-      }
-    },
-    {
-      "name": "probeCommandAsync",
-      "description": "Probe a process command without throwing so readiness can report every actionable failure.",
-      "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 205,
-        "column": 1
-      }
-    },
-    {
-      "name": "failedProbe",
-      "description": "Build a failed probe value.",
-      "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 222,
-        "column": 1
-      }
-    },
-    {
-      "name": "createCheck",
-      "description": "Convert one probe into a concise checklist entry.",
-      "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 227,
-        "column": 1
-      }
-    },
-    {
-      "name": "getErrorMessage",
-      "description": "Convert an unknown error to a stable readiness message.",
-      "sourceLocation": {
-        "filePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "line": 244,
+        "filePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "line": 141,
         "column": 1
       }
     },
@@ -1460,7 +2273,88 @@
       "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
       "sourceLocation": {
         "filePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
-        "line": 4,
+        "line": 5,
+        "column": 1
+      }
+    },
+    {
+      "name": "createProbe",
+      "description": "Create a deterministic executable probe for runtime-composition tests.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "line": 50,
+        "column": 1
+      }
+    },
+    {
+      "name": "createCertificateRuntimeAsync",
+      "description": "Select a usable certificate runtime without making Docker a package prerequisite.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 30,
+        "column": 1
+      }
+    },
+    {
+      "name": "createRuntimeContext",
+      "description": "Normalize optional composition inputs once before runtime selection.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 39,
+        "column": 1
+      }
+    },
+    {
+      "name": "resolveRuntimeKindAsync",
+      "description": "Resolve an explicit or automatically available Certbot runtime kind.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 49,
+        "column": 1
+      }
+    },
+    {
+      "name": "createResolvedRuntime",
+      "description": "Compose the selected concrete runtime behind the certificate port.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 66,
+        "column": 1
+      }
+    },
+    {
+      "name": "runtimeAvailableAsync",
+      "description": "Check whether one runtime's executable boundary is currently usable.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 93,
+        "column": 1
+      }
+    },
+    {
+      "name": "assertRuntimeAvailableAsync",
+      "description": "Require an explicitly selected runtime to be available.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 106,
+        "column": 1
+      }
+    },
+    {
+      "name": "runtimeProbe",
+      "description": "Resolve the executable probe used for one supported runtime kind.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "line": 116,
+        "column": 1
+      }
+    },
+    {
+      "name": "resolveCertificateStorage",
+      "description": "Resolve the host-owned certificate storage tree from an explicit root directory.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "line": 6,
         "column": 1
       }
     },
@@ -1470,6 +2364,222 @@
       "sourceLocation": {
         "filePath": "src/features/certificates/domain/isHttp01Domain.ts",
         "line": 2,
+        "column": 1
+      }
+    },
+    {
+      "name": "prepareCertificateStorageAsync",
+      "description": "Create certificate state directories and verify that the webroot is writable.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "line": 6,
+        "column": 1
+      }
+    },
+    {
+      "name": "readCertificateStateStampAsync",
+      "description": "Read the latest modification timestamp within persisted certificate state.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "line": 5,
+        "column": 1
+      }
+    },
+    {
+      "name": "readDirectoryStampAsync",
+      "description": "Recursively compute the newest file or directory modification timestamp.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "line": 15,
+        "column": 1
+      }
+    },
+    {
+      "name": "isMissingPathError",
+      "description": "Check whether an unknown filesystem failure means a path is absent.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "line": 30,
+        "column": 1
+      }
+    },
+    {
+      "name": "runHttp01PreflightAsync",
+      "description": "Verify runtime readiness, host storage, DNS, and the externally served HTTP-01 webroot.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 17,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeStorageAsync",
+      "description": "Verify that the host-owned certificate storage is writable.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 36,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeDnsAsync",
+      "description": "Resolve one hostname before attempting ACME validation.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 57,
+        "column": 1
+      }
+    },
+    {
+      "name": "probeHttpAsync",
+      "description": "Fetch the exact token over HTTP to verify DNS, TCP/80, routing, and webroot mapping.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 78,
+        "column": 1
+      }
+    },
+    {
+      "name": "writeChallengeAsync",
+      "description": "Write one temporary HTTP-01 token directly into host-owned storage.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 110,
+        "column": 1
+      }
+    },
+    {
+      "name": "removeChallengeAsync",
+      "description": "Remove the temporary HTTP-01 readiness token.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 117,
+        "column": 1
+      }
+    },
+    {
+      "name": "getErrorMessage",
+      "description": "Convert an unknown failure to a stable readiness message.",
+      "sourceLocation": {
+        "filePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "line": 127,
+        "column": 1
+      }
+    },
+    {
+      "name": "createNodeConsumerConfigDiscovery",
+      "description": "Create the Node filesystem adapter used to discover optional consumer configuration.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+        "line": 6,
+        "column": 1
+      }
+    },
+    {
+      "name": "pathExistsAsync",
+      "description": "Check whether one candidate consumer configuration path exists.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+        "line": 19,
+        "column": 1
+      }
+    },
+    {
+      "name": "buildTlsConsumerGuidanceAsync",
+      "description": "Discover an optional consumer config and render non-mutating integration guidance.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 21,
+        "column": 1
+      }
+    },
+    {
+      "name": "resolveConfigPathAsync",
+      "description": "Resolve an explicit consumer config or discover the first standard candidate path.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 33,
+        "column": 1
+      }
+    },
+    {
+      "name": "candidatePaths",
+      "description": "Return standard configuration candidates without assuming that any one path must exist.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 49,
+        "column": 1
+      }
+    },
+    {
+      "name": "local",
+      "description": null,
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 50,
+        "column": 9
+      }
+    },
+    {
+      "name": "renderGuidance",
+      "description": "Render paths and consumer-specific suggestions without editing third-party configuration.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 89,
+        "column": 1
+      }
+    },
+    {
+      "name": "consumerAdvice",
+      "description": "Render concise profile advice while keeping consumer mutation outside TLS core.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "line": 109,
+        "column": 1
+      }
+    },
+    {
+      "name": "inspectTlsConsumerAsync",
+      "description": "Inspect one TLS consumer using the default host filesystem discovery adapter.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "line": 18,
+        "column": 1
+      }
+    },
+    {
+      "name": "isTlsConsumer",
+      "description": "Narrow one CLI value to a supported TLS certificate consumer profile.",
+      "sourceLocation": {
+        "filePath": "src/features/consumers/domain/tlsConsumer.ts",
+        "line": 15,
+        "column": 1
+      }
+    },
+    {
+      "name": "createShellDeploymentHook",
+      "description": "Create a host shell adapter for an explicitly supplied deployment command.",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "line": 13,
+        "column": 1
+      }
+    },
+    {
+      "name": "runDeploymentHookAsync",
+      "description": "Run one explicit host deployment command after certificate files actually change.",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "line": 4,
+        "column": 1
+      }
+    },
+    {
+      "name": "executeDeploymentHookAsync",
+      "description": "Execute one explicit post-renewal host command through the deployment composition boundary.",
+      "sourceLocation": {
+        "filePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "line": 13,
         "column": 1
       }
     },
@@ -1484,7 +2594,7 @@
     },
     {
       "name": "runProcessAsync",
-      "description": "Execute a process while capturing deterministic stdout and stderr.",
+      "description": "Execute a process while capturing output and optionally streaming chunks to the caller.",
       "sourceLocation": {
         "filePath": "src/utils/runProcessAsync.ts",
         "line": 6,
@@ -1503,10 +2613,34 @@
     },
     {
       "kind": "export",
+      "name": "createCertificateRuntimeAsync",
+      "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+      "symbolName": "createCertificateRuntimeAsync",
+      "description": "Select a usable certificate runtime without making Docker a package prerequisite.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
       "name": "createDockerCertbotRuntime",
       "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
       "symbolName": "createDockerCertbotRuntime",
-      "description": "Compose the Docker-backed Certbot adapter for certificate lifecycle and HTTP-01 readiness.",
+      "description": "Create a Docker-backed Certbot adapter over host-owned certificate storage.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "createNativeCertbotRuntime",
+      "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+      "symbolName": "createNativeCertbotRuntime",
+      "description": "Create a native Certbot adapter over host-owned certificate storage.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "createRenewalScheduler",
+      "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts",
+      "symbolName": "createRenewalScheduler",
+      "description": "Compose the host renewal scheduler without exposing its concrete adapter to CLI commands.",
       "isReadme": false
     },
     {
@@ -1535,10 +2669,34 @@
     },
     {
       "kind": "export",
+      "name": "executeDeploymentHookAsync",
+      "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+      "symbolName": "executeDeploymentHookAsync",
+      "description": "Execute one explicit post-renewal host command through the deployment composition boundary.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "inspectTlsConsumerAsync",
+      "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+      "symbolName": "inspectTlsConsumerAsync",
+      "description": "Inspect one TLS consumer using the default host filesystem discovery adapter.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
       "name": "issueCertificatesAsync",
       "sourcePath": "src/features/certificates/application/use-cases/issueCertificatesAsync.ts",
       "symbolName": "issueCertificatesAsync",
       "description": "Issue one independently renewable certificate for every unique validated domain.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "isTlsConsumer",
+      "sourcePath": "src/features/consumers/domain/tlsConsumer.ts",
+      "symbolName": "isTlsConsumer",
+      "description": "Narrow one CLI value to a supported TLS certificate consumer profile.",
       "isReadme": false
     },
     {
@@ -1571,6 +2729,22 @@
       "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
       "symbolName": "renewCertificatesAsync",
       "description": "Renew all due certificates using the runtime's persisted renewal configuration.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "resolveCertificateStorage",
+      "sourcePath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+      "symbolName": "resolveCertificateStorage",
+      "description": "Resolve the host-owned certificate storage tree from an explicit root directory.",
+      "isReadme": false
+    },
+    {
+      "kind": "export",
+      "name": "runDeploymentHookAsync",
+      "sourcePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+      "symbolName": "runDeploymentHookAsync",
+      "description": "Run one explicit host deployment command after certificate files actually change.",
       "isReadme": false
     }
   ],
@@ -1608,7 +2782,17 @@
       },
       {
         "fromPath": "src/index.ts",
+        "toPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
         "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
         "sourcePath": "src/index.ts"
       },
       {
@@ -1634,6 +2818,46 @@
       {
         "fromPath": "src/index.ts",
         "toPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/consumers/domain/tlsConsumer.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "sourcePath": "src/index.ts"
+      },
+      {
+        "fromPath": "src/index.ts",
+        "toPath": "src/types/certificates.ts",
         "sourcePath": "src/index.ts"
       },
       {
@@ -1672,6 +2896,11 @@
         "sourcePath": "src/cli/index.ts"
       },
       {
+        "fromPath": "src/types/certificates.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/types/certificates.ts"
+      },
+      {
         "fromPath": "src/utils/runCheckedProcessAsync.ts",
         "toPath": "src/types/process.ts",
         "sourcePath": "src/utils/runCheckedProcessAsync.ts"
@@ -1680,11 +2909,6 @@
         "fromPath": "src/utils/runProcessAsync.ts",
         "toPath": "src/types/process.ts",
         "sourcePath": "src/utils/runProcessAsync.ts"
-      },
-      {
-        "fromPath": "src/cli/commands/issue.ts",
-        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "sourcePath": "src/cli/commands/issue.ts"
       },
       {
         "fromPath": "src/cli/commands/issue.ts",
@@ -1698,7 +2922,12 @@
       },
       {
         "fromPath": "src/cli/commands/issue.ts",
-        "toPath": "src/features/certificates/constants/certbot.ts",
+        "toPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
         "sourcePath": "src/cli/commands/issue.ts"
       },
       {
@@ -1707,9 +2936,14 @@
         "sourcePath": "src/cli/commands/issue.ts"
       },
       {
-        "fromPath": "src/cli/commands/renew.ts",
-        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "sourcePath": "src/cli/commands/renew.ts"
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/cli/utils/parseTlsConsumerOptions.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/issue.ts",
+        "toPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "sourcePath": "src/cli/commands/issue.ts"
       },
       {
         "fromPath": "src/cli/commands/renew.ts",
@@ -1718,13 +2952,23 @@
       },
       {
         "fromPath": "src/cli/commands/renew.ts",
-        "toPath": "src/features/certificates/constants/certbot.ts",
+        "toPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
-        "fromPath": "src/cli/commands/status.ts",
-        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "sourcePath": "src/cli/commands/status.ts"
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/renew.ts",
+        "toPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "sourcePath": "src/cli/commands/renew.ts"
       },
       {
         "fromPath": "src/cli/commands/status.ts",
@@ -1733,13 +2977,28 @@
       },
       {
         "fromPath": "src/cli/commands/status.ts",
-        "toPath": "src/features/certificates/constants/certbot.ts",
+        "toPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
         "sourcePath": "src/cli/commands/status.ts"
       },
       {
-        "fromPath": "src/cli/commands/automation/disable.ts",
-        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "sourcePath": "src/cli/commands/automation/disable.ts"
+        "fromPath": "src/cli/commands/status.ts",
+        "toPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "sourcePath": "src/cli/commands/status.ts"
+      },
+      {
+        "fromPath": "src/cli/utils/parseTlsConsumerOptions.ts",
+        "toPath": "src/features/consumers/domain/tlsConsumer.ts",
+        "sourcePath": "src/cli/utils/parseTlsConsumerOptions.ts"
+      },
+      {
+        "fromPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "toPath": "src/features/certificates/constants/certbot.ts",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
+        "fromPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
       },
       {
         "fromPath": "src/cli/commands/automation/disable.ts",
@@ -1747,9 +3006,9 @@
         "sourcePath": "src/cli/commands/automation/disable.ts"
       },
       {
-        "fromPath": "src/cli/commands/automation/enable.ts",
-        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "sourcePath": "src/cli/commands/automation/enable.ts"
+        "fromPath": "src/cli/commands/automation/disable.ts",
+        "toPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "sourcePath": "src/cli/commands/automation/disable.ts"
       },
       {
         "fromPath": "src/cli/commands/automation/enable.ts",
@@ -1758,13 +3017,18 @@
       },
       {
         "fromPath": "src/cli/commands/automation/enable.ts",
-        "toPath": "src/features/certificates/constants/certbot.ts",
+        "toPath": "src/features/automation/composition/createRenewalScheduler.ts",
         "sourcePath": "src/cli/commands/automation/enable.ts"
       },
       {
-        "fromPath": "src/cli/commands/automation/status.ts",
-        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
-        "sourcePath": "src/cli/commands/automation/status.ts"
+        "fromPath": "src/cli/commands/automation/enable.ts",
+        "toPath": "src/cli/utils/parseTlsDeploymentOptions.ts",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromPath": "src/cli/commands/automation/enable.ts",
+        "toPath": "src/cli/utils/parseTlsRuntimeOptions.ts",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
       },
       {
         "fromPath": "src/cli/commands/automation/status.ts",
@@ -1772,9 +3036,134 @@
         "sourcePath": "src/cli/commands/automation/status.ts"
       },
       {
+        "fromPath": "src/cli/commands/automation/status.ts",
+        "toPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "toPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/automation/composition/createRenewalScheduler.ts",
+        "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/utils/runProcessAsync.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts",
+        "toPath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/composition/resolveCertificateStorage.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/composition/resolveCertificateStorage.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "toPath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "toPath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "toPath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts",
+        "toPath": "src/features/consumers/domain/tlsConsumer.ts",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "toPath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/composition/executeDeploymentHookAsync.ts",
+        "toPath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
+      },
+      {
         "fromPath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts",
         "toPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
         "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromPath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"
       },
       {
         "fromPath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts",
@@ -1838,8 +3227,33 @@
       },
       {
         "fromPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts",
         "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
         "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "toPath": "src/features/consumers/domain/tlsConsumer.ts",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "toPath": "src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts",
+        "toPath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+        "sourcePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts"
       },
       {
         "fromPath": "src/features/automation/adapters/outbound/systemd/createSystemdRenewalScheduler.ts",
@@ -1872,6 +3286,26 @@
         "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
       },
       {
+        "fromPath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"
+      },
+      {
+        "fromPath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/types/preflight.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
         "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
         "toPath": "src/types/process.ts",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
@@ -1898,28 +3332,98 @@
       },
       {
         "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
-        "toPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "toPath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
-        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts",
+        "toPath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
         "toPath": "src/types/preflight.ts",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
       },
       {
-        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
         "toPath": "src/types/process.ts",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
       },
       {
-        "fromPath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "toPath": "src/features/certificates/constants/certbot.ts",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/utils/runCheckedProcessAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/utils/runProcessAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts",
+        "toPath": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
+        "toPath": "src/types/certificates.ts",
+        "sourcePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
       },
       {
         "fromPath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts",
         "toPath": "src/types/preflight.ts",
         "sourcePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
+      },
+      {
+        "fromPath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts",
+        "toPath": "src/features/consumers/application/ports/outbound/consumerConfigDiscoveryPort.ts",
+        "sourcePath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "toPath": "src/types/process.ts",
+        "sourcePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "toPath": "src/utils/runCheckedProcessAsync.ts",
+        "sourcePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "toPath": "src/utils/runProcessAsync.ts",
+        "sourcePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"
+      },
+      {
+        "fromPath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts",
+        "toPath": "src/features/deployment/application/ports/outbound/deploymentHookPort.ts",
+        "sourcePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"
       }
     ],
     "calls": [
@@ -1967,9 +3471,33 @@
       },
       {
         "fromSymbol": "src/utils/runProcessAsync.ts",
+        "toSymbol": "onStdout",
+        "callExpression": "options.onStdout",
+        "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "src/utils/runProcessAsync.ts",
+        "toSymbol": "onStderr",
+        "callExpression": "options.onStderr",
+        "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "src/utils/runProcessAsync.ts",
         "toSymbol": "resolve",
         "callExpression": "resolve",
         "sourcePath": "src/utils/runProcessAsync.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "parseTlsRuntimeOptions",
+        "callExpression": "parseTlsRuntimeOptions",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "parseTlsConsumerOptions",
+        "callExpression": "parseTlsConsumerOptions",
+        "sourcePath": "src/cli/commands/issue.ts"
       },
       {
         "fromSymbol": "issue",
@@ -1979,8 +3507,14 @@
       },
       {
         "fromSymbol": "issue",
-        "toSymbol": "createDockerCertbotRuntime",
-        "callExpression": "createDockerCertbotRuntime",
+        "toSymbol": "createCertificateRuntimeAsync",
+        "callExpression": "createCertificateRuntimeAsync",
+        "sourcePath": "src/cli/commands/issue.ts"
+      },
+      {
+        "fromSymbol": "issue",
+        "toSymbol": "inspectTlsConsumerAsync",
+        "callExpression": "inspectTlsConsumerAsync",
         "sourcePath": "src/cli/commands/issue.ts"
       },
       {
@@ -2021,14 +3555,26 @@
       },
       {
         "fromSymbol": "renew",
+        "toSymbol": "parseTlsRuntimeOptions",
+        "callExpression": "parseTlsRuntimeOptions",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "renew",
+        "toSymbol": "parseTlsDeploymentOptions",
+        "callExpression": "parseTlsDeploymentOptions",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "renew",
         "toSymbol": "parseArguments",
         "callExpression": "parseArguments",
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
         "fromSymbol": "renew",
-        "toSymbol": "createDockerCertbotRuntime",
-        "callExpression": "createDockerCertbotRuntime",
+        "toSymbol": "createCertificateRuntimeAsync",
+        "callExpression": "createCertificateRuntimeAsync",
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
@@ -2038,27 +3584,33 @@
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
-        "fromSymbol": "parseArguments",
-        "toSymbol": "parseTokens",
-        "callExpression": "parseTokens",
+        "fromSymbol": "renew",
+        "toSymbol": "runDeployHookIfNeededAsync",
+        "callExpression": "runDeployHookIfNeededAsync",
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
-        "fromSymbol": "parseTokens",
-        "toSymbol": "parseTokens",
-        "callExpression": "parseTokens",
+        "fromSymbol": "renew",
+        "toSymbol": "renderRenewalResult",
+        "callExpression": "renderRenewalResult",
+        "sourcePath": "src/cli/commands/renew.ts"
+      },
+      {
+        "fromSymbol": "runDeployHookIfNeededAsync",
+        "toSymbol": "executeDeploymentHookAsync",
+        "callExpression": "executeDeploymentHookAsync",
         "sourcePath": "src/cli/commands/renew.ts"
       },
       {
         "fromSymbol": "status",
-        "toSymbol": "parseStorageVolume",
-        "callExpression": "parseStorageVolume",
+        "toSymbol": "parseTlsRuntimeOptions",
+        "callExpression": "parseTlsRuntimeOptions",
         "sourcePath": "src/cli/commands/status.ts"
       },
       {
         "fromSymbol": "status",
-        "toSymbol": "createDockerCertbotRuntime",
-        "callExpression": "createDockerCertbotRuntime",
+        "toSymbol": "createCertificateRuntimeAsync",
+        "callExpression": "createCertificateRuntimeAsync",
         "sourcePath": "src/cli/commands/status.ts"
       },
       {
@@ -2068,9 +3620,69 @@
         "sourcePath": "src/cli/commands/status.ts"
       },
       {
+        "fromSymbol": "parseTlsConsumerOptions",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsConsumerOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "isTlsConsumer",
+        "callExpression": "isTlsConsumer",
+        "sourcePath": "src/cli/utils/parseTlsConsumerOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsConsumerOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTlsDeploymentOptions",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsDeploymentOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsDeploymentOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTlsRuntimeOptions",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTlsRuntimeOptions",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "isRuntimePreference",
+        "callExpression": "isRuntimePreference",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "parseTokens",
+        "callExpression": "parseTokens",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
+        "fromSymbol": "parseTokens",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/cli/utils/parseTlsRuntimeOptions.ts"
+      },
+      {
         "fromSymbol": "disable",
-        "toSymbol": "createSystemdRenewalScheduler",
-        "callExpression": "createSystemdRenewalScheduler",
+        "toSymbol": "createRenewalScheduler",
+        "callExpression": "createRenewalScheduler",
         "sourcePath": "src/cli/commands/automation/disable.ts"
       },
       {
@@ -2081,14 +3693,20 @@
       },
       {
         "fromSymbol": "enable",
-        "toSymbol": "parseStorageVolume",
-        "callExpression": "parseStorageVolume",
+        "toSymbol": "parseTlsRuntimeOptions",
+        "callExpression": "parseTlsRuntimeOptions",
         "sourcePath": "src/cli/commands/automation/enable.ts"
       },
       {
         "fromSymbol": "enable",
-        "toSymbol": "createSystemdRenewalScheduler",
-        "callExpression": "createSystemdRenewalScheduler",
+        "toSymbol": "parseTlsDeploymentOptions",
+        "callExpression": "parseTlsDeploymentOptions",
+        "sourcePath": "src/cli/commands/automation/enable.ts"
+      },
+      {
+        "fromSymbol": "enable",
+        "toSymbol": "createRenewalScheduler",
+        "callExpression": "createRenewalScheduler",
         "sourcePath": "src/cli/commands/automation/enable.ts"
       },
       {
@@ -2099,8 +3717,8 @@
       },
       {
         "fromSymbol": "status",
-        "toSymbol": "createSystemdRenewalScheduler",
-        "callExpression": "createSystemdRenewalScheduler",
+        "toSymbol": "createRenewalScheduler",
+        "callExpression": "createRenewalScheduler",
         "sourcePath": "src/cli/commands/automation/status.ts"
       },
       {
@@ -2108,6 +3726,282 @@
         "toSymbol": "readRenewalAutomationStatusAsync",
         "callExpression": "readRenewalAutomationStatusAsync",
         "sourcePath": "src/cli/commands/automation/status.ts"
+      },
+      {
+        "fromSymbol": "createRenewalScheduler",
+        "toSymbol": "createSystemdRenewalScheduler",
+        "callExpression": "createSystemdRenewalScheduler",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toSymbol": "test",
+        "callExpression": "test",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toSymbol": "createProbe",
+        "callExpression": "createProbe",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toSymbol": "createCertificateRuntimeAsync",
+        "callExpression": "createCertificateRuntimeAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toSymbol": "expect",
+        "callExpression": "expect",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts",
+        "toSymbol": "exitCode",
+        "callExpression": "exitCode",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
+      },
+      {
+        "fromSymbol": "createCertificateRuntimeAsync",
+        "toSymbol": "createRuntimeContext",
+        "callExpression": "createRuntimeContext",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createCertificateRuntimeAsync",
+        "toSymbol": "resolveRuntimeKindAsync",
+        "callExpression": "resolveRuntimeKindAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createCertificateRuntimeAsync",
+        "toSymbol": "createResolvedRuntime",
+        "callExpression": "createResolvedRuntime",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createRuntimeContext",
+        "toSymbol": "resolveCertificateStorage",
+        "callExpression": "resolveCertificateStorage",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveRuntimeKindAsync",
+        "toSymbol": "assertRuntimeAvailableAsync",
+        "callExpression": "assertRuntimeAvailableAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveRuntimeKindAsync",
+        "toSymbol": "runtimeAvailableAsync",
+        "callExpression": "runtimeAvailableAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createResolvedRuntime",
+        "toSymbol": "createNativeCertbotRuntime",
+        "callExpression": "createNativeCertbotRuntime",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createResolvedRuntime",
+        "toSymbol": "createDockerCertbotRuntime",
+        "callExpression": "createDockerCertbotRuntime",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "runtimeAvailableAsync",
+        "toSymbol": "runtimeProbe",
+        "callExpression": "runtimeProbe",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "runtimeAvailableAsync",
+        "toSymbol": "runProcessAsync",
+        "callExpression": "context.runProcessAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "assertRuntimeAvailableAsync",
+        "toSymbol": "runtimeAvailableAsync",
+        "callExpression": "runtimeAvailableAsync",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveCertificateStorage",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/features/certificates/composition/resolveCertificateStorage.ts"
+      },
+      {
+        "fromSymbol": "prepareCertificateStorageAsync",
+        "toSymbol": "mkdir",
+        "callExpression": "mkdir",
+        "sourcePath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts"
+      },
+      {
+        "fromSymbol": "prepareCertificateStorageAsync",
+        "toSymbol": "access",
+        "callExpression": "access",
+        "sourcePath": "src/features/certificates/utils/prepareCertificateStorageAsync.ts"
+      },
+      {
+        "fromSymbol": "readCertificateStateStampAsync",
+        "toSymbol": "readDirectoryStampAsync",
+        "callExpression": "readDirectoryStampAsync",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "readCertificateStateStampAsync",
+        "toSymbol": "isMissingPathError",
+        "callExpression": "isMissingPathError",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "readDirectoryStampAsync",
+        "toSymbol": "readdir",
+        "callExpression": "readdir",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "toSymbol": "readDirectoryStampAsync",
+        "callExpression": "readDirectoryStampAsync",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/utils/readCertificateStateStampAsync.ts",
+        "toSymbol": "stat",
+        "callExpression": "stat",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "readDirectoryStampAsync",
+        "toSymbol": "stat",
+        "callExpression": "stat",
+        "sourcePath": "src/features/certificates/utils/readCertificateStateStampAsync.ts"
+      },
+      {
+        "fromSymbol": "runHttp01PreflightAsync",
+        "toSymbol": "probeStorageAsync",
+        "callExpression": "probeStorageAsync",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runHttp01PreflightAsync",
+        "toSymbol": "randomUUID",
+        "callExpression": "randomUUID",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runHttp01PreflightAsync",
+        "toSymbol": "writeChallengeAsync",
+        "callExpression": "writeChallengeAsync",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/certificates/utils/runHttp01PreflightAsync.ts",
+        "toSymbol": "probeHttpAsync",
+        "callExpression": "probeHttpAsync",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "runHttp01PreflightAsync",
+        "toSymbol": "removeChallengeAsync",
+        "callExpression": "removeChallengeAsync",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeStorageAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeStorageAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeDnsAsync",
+        "toSymbol": "lookup",
+        "callExpression": "lookup",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeDnsAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "probeHttpAsync",
+        "toSymbol": "getErrorMessage",
+        "callExpression": "getErrorMessage",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "writeChallengeAsync",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "writeChallengeAsync",
+        "toSymbol": "mkdir",
+        "callExpression": "mkdir",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "writeChallengeAsync",
+        "toSymbol": "writeFile",
+        "callExpression": "writeFile",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "removeChallengeAsync",
+        "toSymbol": "rm",
+        "callExpression": "rm",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "removeChallengeAsync",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/certificates/utils/runHttp01PreflightAsync.ts"
+      },
+      {
+        "fromSymbol": "inspectTlsConsumerAsync",
+        "toSymbol": "buildTlsConsumerGuidanceAsync",
+        "callExpression": "buildTlsConsumerGuidanceAsync",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromSymbol": "inspectTlsConsumerAsync",
+        "toSymbol": "createNodeConsumerConfigDiscovery",
+        "callExpression": "createNodeConsumerConfigDiscovery",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromSymbol": "executeDeploymentHookAsync",
+        "toSymbol": "createShellDeploymentHook",
+        "callExpression": "createShellDeploymentHook",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
+      },
+      {
+        "fromSymbol": "executeDeploymentHookAsync",
+        "toSymbol": "runDeploymentHookAsync",
+        "callExpression": "runDeploymentHookAsync",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
       },
       {
         "fromSymbol": "disableRenewalAutomationAsync",
@@ -2236,6 +4130,72 @@
         "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
       },
       {
+        "fromSymbol": "buildTlsConsumerGuidanceAsync",
+        "toSymbol": "resolveConfigPathAsync",
+        "callExpression": "resolveConfigPathAsync",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "buildTlsConsumerGuidanceAsync",
+        "toSymbol": "renderGuidance",
+        "callExpression": "renderGuidance",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveConfigPathAsync",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveConfigPathAsync",
+        "toSymbol": "pathExistsAsync",
+        "callExpression": "discovery.pathExistsAsync",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveConfigPathAsync",
+        "toSymbol": "findFirstExistingAsync",
+        "callExpression": "discovery.findFirstExistingAsync",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveConfigPathAsync",
+        "toSymbol": "candidatePaths",
+        "callExpression": "candidatePaths",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "local",
+        "toSymbol": "resolve",
+        "callExpression": "resolve",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "candidatePaths",
+        "toSymbol": "local",
+        "callExpression": "local",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts",
+        "toSymbol": "join",
+        "callExpression": "join",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "renderGuidance",
+        "toSymbol": "consumerAdvice",
+        "callExpression": "consumerAdvice",
+        "sourcePath": "src/features/consumers/application/use-cases/buildTlsConsumerGuidanceAsync.ts"
+      },
+      {
+        "fromSymbol": "runDeploymentHookAsync",
+        "toSymbol": "runAsync",
+        "callExpression": "hook.runAsync",
+        "sourcePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts"
+      },
+      {
         "fromSymbol": "enableAsync",
         "toSymbol": "assertSystemdPlatform",
         "callExpression": "assertSystemdPlatform",
@@ -2344,12 +4304,6 @@
         "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.test.ts"
       },
       {
-        "fromSymbol": "renderSystemdRenewalUnits",
-        "toSymbol": "validateStorageVolumeName",
-        "callExpression": "validateStorageVolumeName",
-        "sourcePath": "src/features/automation/adapters/outbound/systemd/renderSystemdRenewalUnits.ts"
-      },
-      {
         "fromSymbol": "issueAsync",
         "toSymbol": "issueAsync",
         "callExpression": "issueAsync",
@@ -2357,8 +4311,8 @@
       },
       {
         "fromSymbol": "preflightAsync",
-        "toSymbol": "runDockerTlsPreflightAsync",
-        "callExpression": "runDockerTlsPreflightAsync",
+        "toSymbol": "preflightAsync",
+        "callExpression": "preflightAsync",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
@@ -2375,8 +4329,8 @@
       },
       {
         "fromSymbol": "issueAsync",
-        "toSymbol": "ensureStorageAsync",
-        "callExpression": "ensureStorageAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
@@ -2399,8 +4353,14 @@
       },
       {
         "fromSymbol": "renewAsync",
-        "toSymbol": "ensureStorageAsync",
-        "callExpression": "ensureStorageAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "readCertificateStateStampAsync",
+        "callExpression": "readCertificateStateStampAsync",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
@@ -2423,8 +4383,8 @@
       },
       {
         "fromSymbol": "statusAsync",
-        "toSymbol": "ensureStorageAsync",
-        "callExpression": "ensureStorageAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
@@ -2446,118 +4406,142 @@
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
-        "fromSymbol": "ensureStorageAsync",
-        "toSymbol": "runCheckedProcessAsync",
-        "callExpression": "runCheckedProcessAsync",
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "probeDockerAsync",
+        "callExpression": "probeDockerAsync",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
-        "fromSymbol": "runDockerTlsPreflightAsync",
-        "toSymbol": "probeCommandAsync",
-        "callExpression": "probeCommandAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "runHttp01PreflightAsync",
+        "callExpression": "runHttp01PreflightAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
-        "fromSymbol": "runDockerTlsPreflightAsync",
-        "toSymbol": "failedProbe",
-        "callExpression": "failedProbe",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "runDockerTlsPreflightAsync",
-        "toSymbol": "createBaseChecks",
-        "callExpression": "createBaseChecks",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "runDockerTlsPreflightAsync",
-        "toSymbol": "finishHttp01PreflightAsync",
-        "callExpression": "finishHttp01PreflightAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "finishHttp01PreflightAsync",
-        "toSymbol": "randomUUID",
-        "callExpression": "randomUUID",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "finishHttp01PreflightAsync",
-        "toSymbol": "writeChallengeAsync",
-        "callExpression": "writeChallengeAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "finishHttp01PreflightAsync",
-        "toSymbol": "createCheck",
-        "callExpression": "createCheck",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts",
-        "toSymbol": "probeHttpAsync",
-        "callExpression": "probeHttpAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "finishHttp01PreflightAsync",
-        "toSymbol": "removeChallengeAsync",
-        "callExpression": "removeChallengeAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "createBaseChecks",
-        "toSymbol": "createCheck",
-        "callExpression": "createCheck",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "probeDnsAsync",
-        "toSymbol": "lookup",
-        "callExpression": "lookup",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "probeDnsAsync",
-        "toSymbol": "getErrorMessage",
-        "callExpression": "getErrorMessage",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "probeHttpAsync",
-        "toSymbol": "getErrorMessage",
-        "callExpression": "getErrorMessage",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "writeChallengeAsync",
-        "toSymbol": "probeCommandAsync",
-        "callExpression": "probeCommandAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
-      },
-      {
-        "fromSymbol": "removeChallengeAsync",
+        "fromSymbol": "probeDockerAsync",
         "toSymbol": "runProcessAsync",
-        "callExpression": "input.runProcessAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "callExpression": "runtime.runProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
       },
       {
-        "fromSymbol": "probeCommandAsync",
+        "fromSymbol": "issueAsync",
+        "toSymbol": "issueAsync",
+        "callExpression": "issueAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "preflightAsync",
+        "callExpression": "preflightAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "renewAsync",
+        "callExpression": "renewAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "statusAsync",
+        "callExpression": "statusAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "issueAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "readCertificateStateStampAsync",
+        "callExpression": "readCertificateStateStampAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "renewAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "prepareCertificateStorageAsync",
+        "callExpression": "prepareCertificateStorageAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "statusAsync",
+        "toSymbol": "stateDirectoryArguments",
+        "callExpression": "stateDirectoryArguments",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "runHttp01PreflightAsync",
+        "callExpression": "runHttp01PreflightAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "preflightAsync",
+        "toSymbol": "probeNativeCertbotAsync",
+        "callExpression": "probeNativeCertbotAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "probeNativeCertbotAsync",
         "toSymbol": "runProcessAsync",
-        "callExpression": "runProcessAsync",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "callExpression": "runtime.runProcessAsync",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
       },
       {
-        "fromSymbol": "probeCommandAsync",
-        "toSymbol": "failedProbe",
-        "callExpression": "failedProbe",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "fromSymbol": "findFirstExistingAsync",
+        "toSymbol": "pathExistsAsync",
+        "callExpression": "pathExistsAsync",
+        "sourcePath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts"
       },
       {
-        "fromSymbol": "probeCommandAsync",
-        "toSymbol": "getErrorMessage",
-        "callExpression": "getErrorMessage",
-        "sourcePath": "src/features/certificates/adapters/outbound/docker/runDockerTlsPreflightAsync.ts"
+        "fromSymbol": "pathExistsAsync",
+        "toSymbol": "access",
+        "callExpression": "access",
+        "sourcePath": "src/features/consumers/adapters/outbound/node/createNodeConsumerConfigDiscovery.ts"
+      },
+      {
+        "fromSymbol": "runAsync",
+        "toSymbol": "runCheckedProcessAsync",
+        "callExpression": "runCheckedProcessAsync",
+        "sourcePath": "src/features/deployment/adapters/outbound/shell/createShellDeploymentHook.ts"
       }
     ],
     "typeReferences": [
@@ -2578,6 +4562,11 @@
       },
       {
         "fromSymbol": "RenewalSchedulerPort",
+        "toType": "CertificateRuntimePreference",
+        "sourcePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
+      },
+      {
+        "fromSymbol": "RenewalSchedulerPort",
         "toType": "RenewalAutomationStatus",
         "sourcePath": "src/features/automation/application/ports/outbound/renewalSchedulerPort.ts"
       },
@@ -2585,6 +4574,11 @@
         "fromSymbol": "disableRenewalAutomationAsync",
         "toType": "RenewalSchedulerPort",
         "sourcePath": "src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts"
+      },
+      {
+        "fromSymbol": "enableRenewalAutomationAsync",
+        "toType": "CertificateRuntimePreference",
+        "sourcePath": "src/features/automation/application/use-cases/enableRenewalAutomationAsync.ts"
       },
       {
         "fromSymbol": "enableRenewalAutomationAsync",
@@ -2602,6 +4596,16 @@
         "sourcePath": "src/features/automation/application/use-cases/readRenewalAutomationStatusAsync.ts"
       },
       {
+        "fromSymbol": "createRenewalScheduler",
+        "toType": "CreateRenewalSchedulerOptions",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
+        "fromSymbol": "createRenewalScheduler",
+        "toType": "RenewalSchedulerPort",
+        "sourcePath": "src/features/automation/composition/createRenewalScheduler.ts"
+      },
+      {
         "fromSymbol": "createDockerCertbotRuntime",
         "toType": "CertificateRuntimePort",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
@@ -2610,6 +4614,21 @@
         "fromSymbol": "createDockerCertbotRuntime",
         "toType": "CreateDockerCertbotRuntimeOptions",
         "sourcePath": "src/features/certificates/adapters/outbound/docker/createDockerCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "createNativeCertbotRuntime",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "createNativeCertbotRuntime",
+        "toType": "CreateNativeCertbotRuntimeOptions",
+        "sourcePath": "src/features/certificates/adapters/outbound/native/createNativeCertbotRuntime.ts"
+      },
+      {
+        "fromSymbol": "CertificateRuntimePort",
+        "toType": "CertificateRenewalResult",
+        "sourcePath": "src/features/certificates/application/ports/outbound/certificateRuntimePort.ts"
       },
       {
         "fromSymbol": "CertificateRuntimePort",
@@ -2638,8 +4657,63 @@
       },
       {
         "fromSymbol": "renewCertificatesAsync",
+        "toType": "CertificateRenewalResult",
+        "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "renewCertificatesAsync",
         "toType": "CertificateRuntimePort",
         "sourcePath": "src/features/certificates/application/use-cases/renewCertificatesAsync.ts"
+      },
+      {
+        "fromSymbol": "createCertificateRuntimeAsync",
+        "toType": "CreateCertificateRuntimeOptions",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "createCertificateRuntimeAsync",
+        "toType": "ResolvedCertificateRuntime",
+        "sourcePath": "src/features/certificates/composition/createCertificateRuntimeAsync.ts"
+      },
+      {
+        "fromSymbol": "resolveCertificateStorage",
+        "toType": "CertificateStoragePaths",
+        "sourcePath": "src/features/certificates/composition/resolveCertificateStorage.ts"
+      },
+      {
+        "fromSymbol": "inspectTlsConsumerAsync",
+        "toType": "InspectTlsConsumerInput",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromSymbol": "inspectTlsConsumerAsync",
+        "toType": "TlsConsumerGuidance",
+        "sourcePath": "src/features/consumers/composition/inspectTlsConsumerAsync.ts"
+      },
+      {
+        "fromSymbol": "runDeploymentHookAsync",
+        "toType": "DeploymentHookPort",
+        "sourcePath": "src/features/deployment/application/use-cases/runDeploymentHookAsync.ts"
+      },
+      {
+        "fromSymbol": "executeDeploymentHookAsync",
+        "toType": "ExecuteDeploymentHookInput",
+        "sourcePath": "src/features/deployment/composition/executeDeploymentHookAsync.ts"
+      },
+      {
+        "fromSymbol": "ResolvedCertificateRuntime",
+        "toType": "CertificateRuntimeKind",
+        "sourcePath": "src/types/certificates.ts"
+      },
+      {
+        "fromSymbol": "ResolvedCertificateRuntime",
+        "toType": "CertificateRuntimePort",
+        "sourcePath": "src/types/certificates.ts"
+      },
+      {
+        "fromSymbol": "ResolvedCertificateRuntime",
+        "toType": "CertificateStoragePaths",
+        "sourcePath": "src/types/certificates.ts"
       }
     ],
     "componentComposition": []
