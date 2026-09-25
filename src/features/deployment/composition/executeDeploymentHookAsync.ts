@@ -10,9 +10,7 @@ interface ExecuteDeploymentHookInput {
 }
 
 /*** Execute one explicit post-renewal host command through the deployment composition boundary. */
-export async function executeDeploymentHookAsync(
-  input: ExecuteDeploymentHookInput,
-): Promise<void> {
+export async function executeDeploymentHookAsync(input: ExecuteDeploymentHookInput): Promise<void> {
   const hook = createShellDeploymentHook({
     output: input.output,
     runProcessAsync: input.runProcessAsync,
