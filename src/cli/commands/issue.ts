@@ -18,8 +18,8 @@ export const issue: AnkhCommandHandler = async (request) => {
       preference: runtimeOptions.runtimePreference,
       storageDirectory: runtimeOptions.storageDirectory,
       output: {
-        onStdout: request.context.writeStdout,
-        onStderr: request.context.writeStderr,
+        onStdout: (chunk) => request.context.writeStdout(chunk),
+        onStderr: (chunk) => request.context.writeStderr(chunk),
       },
     });
 
