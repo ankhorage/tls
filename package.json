@@ -18,7 +18,12 @@
       "import": "./dist/cli/index.js",
       "default": "./dist/cli/index.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./capabilities": {
+      "types": "./dist/capabilities/index.d.ts",
+      "import": "./dist/capabilities/index.js",
+      "default": "./dist/capabilities/index.js"
+    }
   },
   "files": [
     "dist",
@@ -51,12 +56,96 @@
     "category": "tls",
     "provider": "./dist/cli/index.js",
     "capabilities": [
-      "tls.issue",
-      "tls.renew",
-      "tls.status",
-      "tls.automation.enable",
-      "tls.automation.status",
-      "tls.automation.disable"
+      {
+        "id": "tls.issue",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Issue certificate",
+        "description": "Preflight HTTP-01 prerequisites and issue one certificate per domain."
+      },
+      {
+        "id": "tls.renew",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Renew certificates",
+        "description": "Renew certificates that are due according to persisted ACME state."
+      },
+      {
+        "id": "tls.status",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Inspect TLS status",
+        "description": "Show the certificates known to the TLS runtime."
+      },
+      {
+        "id": "tls.automation.enable",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Enable TLS automation",
+        "description": "Enable persistent daily TLS renewal checks."
+      },
+      {
+        "id": "tls.automation.status",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Inspect TLS automation",
+        "description": "Show TLS renewal scheduler state."
+      },
+      {
+        "id": "tls.automation.disable",
+        "owner": "@ankhorage/tls",
+        "access": [
+          "invoke"
+        ],
+        "binding": {
+          "kind": "action",
+          "bindableAs": [
+            "target"
+          ]
+        },
+        "label": "Disable TLS automation",
+        "description": "Disable TLS renewal scheduling."
+      }
     ]
   },
   "scripts": {
@@ -75,12 +164,12 @@
     "test:standalone": "bun test src/features/certificates/composition/createCertificateRuntimeAsync.test.ts"
   },
   "dependencies": {
-    "@ankhorage/ankh": "^0.10.4",
-    "@ankhorage/contracts": "^22.8.1"
+    "@ankhorage/ankh": "^0.12.0",
+    "@ankhorage/contracts": "^24.1.0"
   },
   "devDependencies": {
     "@ankhorage/devtools": "^1.19.19",
-    "@types/bun": "^1.4.1",
+    "@types/bun": "^1.4.2",
     "@types/node": "^24.13.3",
     "typescript": "~6.0.3",
     "@ankhorage/paradox": "^0.1.26"
