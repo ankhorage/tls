@@ -242,7 +242,7 @@ Narrow one CLI value to a supported TLS certificate consumer profile.
 
 Kind: `value`
 Module: `src/cli/index.ts`
-Source: `src/cli/index.ts:62:7`
+Source: `src/cli/index.ts:51:7`
 
 ## readCertificateStatusAsync
 

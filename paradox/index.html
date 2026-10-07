@@ -157,11 +157,6 @@
       <small>1 function</small>
     </button>
   </li><li>
-    <button class="nav-button" type="button" data-target="src/cli/index.ts">
-      src/cli/index.ts
-      <small>1 function</small>
-    </button>
-  </li><li>
     <button class="nav-button" type="button" data-target="src/cli/utils/parseTlsConsumerOptions.ts">
       src/cli/utils/parseTlsConsumerOptions.ts
       <small>2 functions</small>
@@ -338,7 +333,7 @@
       <div class="summary">
         <div><strong>31</strong><span class="muted">public exports</span></div>
         <div><strong>0</strong><span class="muted">components</span></div>
-        <div><strong>50</strong><span class="muted">modules</span></div>
+        <div><strong>53</strong><span class="muted">modules</span></div>
         <div><strong>2</strong><span class="muted">entrypoints</span></div>
       </div>
       <h3>Entrypoints</h3>
@@ -349,7 +344,17 @@
     
     <section class="panel">
       <h2>Modules</h2>
-      <article class="item" data-search="src/cli/commands/automation/disable.ts src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts src/features/automation/composition/createRenewalScheduler.ts disable">
+      <article class="item" data-search="package.json">
+    <h3>package.json</h3>
+    <p class="muted">Referenced module</p>
+    <p><strong>Dependencies:</strong> <span class="empty">None</span></p>
+    <p><strong>Exports:</strong> <span class="empty">None</span></p>
+  </article><article class="item" data-search="src/capabilities/index.ts CAPABILITIES">
+    <h3>src/capabilities/index.ts</h3>
+    <p class="muted">Referenced module</p>
+    <p><strong>Dependencies:</strong> <span class="empty">None</span></p>
+    <p><strong>Exports:</strong> <code>CAPABILITIES</code></p>
+  </article><article class="item" data-search="src/cli/commands/automation/disable.ts src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts src/features/automation/composition/createRenewalScheduler.ts disable">
     <h3>src/cli/commands/automation/disable.ts</h3>
     <p class="muted">Referenced module</p>
     <p><strong>Dependencies:</strong> <code>src/features/automation/application/use-cases/disableRenewalAutomationAsync.ts</code>, <code>src/features/automation/composition/createRenewalScheduler.ts</code></p>
@@ -379,10 +384,15 @@
     <p class="muted">Referenced module</p>
     <p><strong>Dependencies:</strong> <code>src/cli/utils/parseTlsRuntimeOptions.ts</code>, <code>src/features/certificates/application/use-cases/readCertificateStatusAsync.ts</code>, <code>src/features/certificates/composition/createCertificateRuntimeAsync.ts</code></p>
     <p><strong>Exports:</strong> <code>status</code></p>
-  </article><article class="item" data-search="src/cli/index.ts src/cli/commands/automation/disable.ts src/cli/commands/automation/enable.ts src/cli/commands/automation/status.ts src/cli/commands/issue.ts src/cli/commands/renew.ts src/cli/commands/status.ts default">
+  </article><article class="item" data-search="src/cli/index.test.ts package.json src/capabilities/index.ts src/cli/index.ts">
+    <h3>src/cli/index.test.ts</h3>
+    <p class="muted">Referenced module</p>
+    <p><strong>Dependencies:</strong> <code>package.json</code>, <code>src/capabilities/index.ts</code>, <code>src/cli/index.ts</code></p>
+    <p><strong>Exports:</strong> <span class="empty">None</span></p>
+  </article><article class="item" data-search="src/cli/index.ts package.json src/capabilities/index.ts src/cli/commands/automation/disable.ts src/cli/commands/automation/enable.ts src/cli/commands/automation/status.ts src/cli/commands/issue.ts src/cli/commands/renew.ts src/cli/commands/status.ts default">
     <h3>src/cli/index.ts</h3>
     <p class="muted">Configured entrypoint</p>
-    <p><strong>Dependencies:</strong> <code>src/cli/commands/automation/disable.ts</code>, <code>src/cli/commands/automation/enable.ts</code>, <code>src/cli/commands/automation/status.ts</code>, <code>src/cli/commands/issue.ts</code>, <code>src/cli/commands/renew.ts</code>, <code>src/cli/commands/status.ts</code></p>
+    <p><strong>Dependencies:</strong> <code>package.json</code>, <code>src/capabilities/index.ts</code>, <code>src/cli/commands/automation/disable.ts</code>, <code>src/cli/commands/automation/enable.ts</code>, <code>src/cli/commands/automation/status.ts</code>, <code>src/cli/commands/issue.ts</code>, <code>src/cli/commands/renew.ts</code>, <code>src/cli/commands/status.ts</code></p>
     <p><strong>Exports:</strong> <code>default</code></p>
   </article><article class="item" data-search="src/cli/utils/parseTlsConsumerOptions.ts src/features/consumers/domain/tlsConsumer.ts parseTlsConsumerOptions">
     <h3>src/cli/utils/parseTlsConsumerOptions.ts</h3>
@@ -608,7 +618,7 @@
               <h3>src/cli/index.ts</h3>
               <article class="item" id="symbol-provider" data-search="provider value src/cli/index.ts ">
     <h4>provider</h4>
-    <p class="muted">value • <code>src/cli/index.ts:62:7</code></p>
+    <p class="muted">value • <code>src/cli/index.ts:51:7</code></p>
     
     <p><strong>Export paths:</strong> <code>src/cli/index.ts</code></p>
     <div><strong>Related symbols:</strong> <span class="empty">None</span></div>
@@ -1449,6 +1459,10 @@
   package__ankhorage_tls --&gt; entrypoint_src_cli_index_ts
   entrypoint_src_index_ts[&quot;src/index.ts&quot;]
   package__ankhorage_tls --&gt; entrypoint_src_index_ts
+  module_package_json[&quot;package.json&quot;]
+  package__ankhorage_tls -.-&gt; module_package_json
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
+  package__ankhorage_tls -.-&gt; module_src_capabilities_index_ts
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   package__ankhorage_tls -.-&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_commands_automation_disable_ts --&gt; module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts
@@ -1484,7 +1498,14 @@
   module_src_cli_commands_status_ts --&gt; module_src_cli_utils_parseTlsRuntimeOptions_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_composition_createCertificateRuntimeAsync_ts
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
+  package__ankhorage_tls -.-&gt; module_src_cli_index_test_ts
+  module_src_cli_index_test_ts --&gt; module_package_json
+  module_src_cli_index_test_ts --&gt; module_src_capabilities_index_ts
+  module_src_cli_index_test_ts --&gt; module_src_cli_index_ts
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
+  module_src_cli_index_ts --&gt; module_package_json
+  module_src_cli_index_ts --&gt; module_src_capabilities_index_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_enable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_status_ts
@@ -1668,6 +1689,10 @@
   package__ankhorage_tls --&gt; entrypoint_src_cli_index_ts
   entrypoint_src_index_ts[&quot;src/index.ts&quot;]
   package__ankhorage_tls --&gt; entrypoint_src_index_ts
+  module_package_json[&quot;package.json&quot;]
+  package__ankhorage_tls -.-&gt; module_package_json
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
+  package__ankhorage_tls -.-&gt; module_src_capabilities_index_ts
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   package__ankhorage_tls -.-&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_commands_automation_disable_ts --&gt; module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts
@@ -1703,7 +1728,14 @@
   module_src_cli_commands_status_ts --&gt; module_src_cli_utils_parseTlsRuntimeOptions_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_composition_createCertificateRuntimeAsync_ts
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
+  package__ankhorage_tls -.-&gt; module_src_cli_index_test_ts
+  module_src_cli_index_test_ts --&gt; module_package_json
+  module_src_cli_index_test_ts --&gt; module_src_capabilities_index_ts
+  module_src_cli_index_test_ts --&gt; module_src_cli_index_ts
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
+  module_src_cli_index_ts --&gt; module_package_json
+  module_src_cli_index_ts --&gt; module_src_capabilities_index_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_enable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_status_ts
@@ -1884,12 +1916,15 @@
     <h3>Module relationships</h3>
     <p class="muted"><code>diagrams/module-relationships.mmd</code></p>
     <div class="mermaid">graph LR
+  module_package_json[&quot;package.json&quot;]
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   module_src_cli_commands_automation_enable_ts[&quot;src/cli/commands/automation/enable.ts&quot;]
   module_src_cli_commands_automation_status_ts[&quot;src/cli/commands/automation/status.ts&quot;]
   module_src_cli_commands_issue_ts[&quot;src/cli/commands/issue.ts&quot;]
   module_src_cli_commands_renew_ts[&quot;src/cli/commands/renew.ts&quot;]
   module_src_cli_commands_status_ts[&quot;src/cli/commands/status.ts&quot;]
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
   module_src_cli_utils_parseTlsConsumerOptions_ts[&quot;src/cli/utils/parseTlsConsumerOptions.ts&quot;]
   module_src_cli_utils_parseTlsDeploymentOptions_ts[&quot;src/cli/utils/parseTlsDeploymentOptions.ts&quot;]
@@ -1957,6 +1992,11 @@
   module_src_cli_commands_status_ts --&gt; module_src_cli_utils_parseTlsRuntimeOptions_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_composition_createCertificateRuntimeAsync_ts
+  module_src_cli_index_test_ts --&gt; module_package_json
+  module_src_cli_index_test_ts --&gt; module_src_capabilities_index_ts
+  module_src_cli_index_test_ts --&gt; module_src_cli_index_ts
+  module_src_cli_index_ts --&gt; module_package_json
+  module_src_cli_index_ts --&gt; module_src_capabilities_index_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_enable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_status_ts
@@ -2050,12 +2090,15 @@
     <details>
       <summary>View Mermaid source</summary>
       <pre>graph LR
+  module_package_json[&quot;package.json&quot;]
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   module_src_cli_commands_automation_enable_ts[&quot;src/cli/commands/automation/enable.ts&quot;]
   module_src_cli_commands_automation_status_ts[&quot;src/cli/commands/automation/status.ts&quot;]
   module_src_cli_commands_issue_ts[&quot;src/cli/commands/issue.ts&quot;]
   module_src_cli_commands_renew_ts[&quot;src/cli/commands/renew.ts&quot;]
   module_src_cli_commands_status_ts[&quot;src/cli/commands/status.ts&quot;]
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
   module_src_cli_utils_parseTlsConsumerOptions_ts[&quot;src/cli/utils/parseTlsConsumerOptions.ts&quot;]
   module_src_cli_utils_parseTlsDeploymentOptions_ts[&quot;src/cli/utils/parseTlsDeploymentOptions.ts&quot;]
@@ -2123,6 +2166,11 @@
   module_src_cli_commands_status_ts --&gt; module_src_cli_utils_parseTlsRuntimeOptions_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts
   module_src_cli_commands_status_ts --&gt; module_src_features_certificates_composition_createCertificateRuntimeAsync_ts
+  module_src_cli_index_test_ts --&gt; module_package_json
+  module_src_cli_index_test_ts --&gt; module_src_capabilities_index_ts
+  module_src_cli_index_test_ts --&gt; module_src_cli_index_ts
+  module_src_cli_index_ts --&gt; module_package_json
+  module_src_cli_index_ts --&gt; module_src_capabilities_index_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_disable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_enable_ts
   module_src_cli_index_ts --&gt; module_src_cli_commands_automation_status_ts
@@ -2218,12 +2266,15 @@
     <h3>Export graph</h3>
     <p class="muted"><code>diagrams/export-graph.mmd</code></p>
     <div class="mermaid">graph LR
+  module_package_json[&quot;package.json&quot;]
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   module_src_cli_commands_automation_enable_ts[&quot;src/cli/commands/automation/enable.ts&quot;]
   module_src_cli_commands_automation_status_ts[&quot;src/cli/commands/automation/status.ts&quot;]
   module_src_cli_commands_issue_ts[&quot;src/cli/commands/issue.ts&quot;]
   module_src_cli_commands_renew_ts[&quot;src/cli/commands/renew.ts&quot;]
   module_src_cli_commands_status_ts[&quot;src/cli/commands/status.ts&quot;]
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
   module_src_cli_utils_parseTlsConsumerOptions_ts[&quot;src/cli/utils/parseTlsConsumerOptions.ts&quot;]
   module_src_cli_utils_parseTlsDeploymentOptions_ts[&quot;src/cli/utils/parseTlsDeploymentOptions.ts&quot;]
@@ -2359,12 +2410,15 @@
     <details>
       <summary>View Mermaid source</summary>
       <pre>graph LR
+  module_package_json[&quot;package.json&quot;]
+  module_src_capabilities_index_ts[&quot;src/capabilities/index.ts&quot;]
   module_src_cli_commands_automation_disable_ts[&quot;src/cli/commands/automation/disable.ts&quot;]
   module_src_cli_commands_automation_enable_ts[&quot;src/cli/commands/automation/enable.ts&quot;]
   module_src_cli_commands_automation_status_ts[&quot;src/cli/commands/automation/status.ts&quot;]
   module_src_cli_commands_issue_ts[&quot;src/cli/commands/issue.ts&quot;]
   module_src_cli_commands_renew_ts[&quot;src/cli/commands/renew.ts&quot;]
   module_src_cli_commands_status_ts[&quot;src/cli/commands/status.ts&quot;]
+  module_src_cli_index_test_ts[&quot;src/cli/index.test.ts&quot;]
   module_src_cli_index_ts[&quot;src/cli/index.ts&quot;]
   module_src_cli_utils_parseTlsConsumerOptions_ts[&quot;src/cli/utils/parseTlsConsumerOptions.ts&quot;]
   module_src_cli_utils_parseTlsDeploymentOptions_ts[&quot;src/cli/utils/parseTlsDeploymentOptions.ts&quot;]
@@ -2741,15 +2795,6 @@
     <h3>status</h3>
     <p class="muted"><code>src/cli/commands/status.ts:8:14</code></p>
     <p>Show certificates known to the selected persistent certificate runtime.</p>
-  </article>
-    </section>
-  </section><section id="view-src-cli-index-ts" class="view" data-view="src/cli/index.ts" hidden>
-    <section class="panel">
-      <h2>src/cli/index.ts</h2>
-      <article class="item" data-search="readPackageVersion src/cli/index.ts Read the installed TLS package version for the Ankh provider manifest.">
-    <h3>readPackageVersion</h3>
-    <p class="muted"><code>src/cli/index.ts:81:1</code></p>
-    <p>Read the installed TLS package version for the Ankh provider manifest.</p>
   </article>
     </section>
   </section><section id="view-src-cli-utils-parsetlsconsumeroptions-ts" class="view" data-view="src/cli/utils/parseTlsConsumerOptions.ts" hidden>

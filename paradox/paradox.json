@@ -14,7 +14,7 @@
     {
       "id": "npm",
       "label": "npm",
-      "value": "v0.2.0",
+      "value": "v0.2.1",
       "color": "cb3837"
     },
     {
@@ -79,6 +79,20 @@
     "src/index.ts"
   ],
   "modules": [
+    {
+      "path": "package.json",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": []
+    },
+    {
+      "path": "src/capabilities/index.ts",
+      "isEntrypoint": false,
+      "dependencies": [],
+      "exports": [
+        "CAPABILITIES"
+      ]
+    },
     {
       "path": "src/cli/commands/automation/disable.ts",
       "isEntrypoint": false,
@@ -157,9 +171,21 @@
       ]
     },
     {
+      "path": "src/cli/index.test.ts",
+      "isEntrypoint": false,
+      "dependencies": [
+        "package.json",
+        "src/capabilities/index.ts",
+        "src/cli/index.ts"
+      ],
+      "exports": []
+    },
+    {
       "path": "src/cli/index.ts",
       "isEntrypoint": true,
       "dependencies": [
+        "package.json",
+        "src/capabilities/index.ts",
         "src/cli/commands/automation/disable.ts",
         "src/cli/commands/automation/enable.ts",
         "src/cli/commands/automation/status.ts",
@@ -1329,7 +1355,7 @@
       "modulePath": "src/cli/index.ts",
       "sourceLocation": {
         "filePath": "src/cli/index.ts",
-        "line": 62,
+        "line": 51,
         "column": 7
       },
       "exportPaths": [
@@ -1915,15 +1941,6 @@
         "filePath": "src/cli/commands/status.ts",
         "line": 8,
         "column": 14
-      }
-    },
-    {
-      "name": "readPackageVersion",
-      "description": "Read the installed TLS package version for the Ankh provider manifest.",
-      "sourceLocation": {
-        "filePath": "src/cli/index.ts",
-        "line": 81,
-        "column": 1
       }
     },
     {
@@ -2866,6 +2883,31 @@
         "sourcePath": "src/index.ts"
       },
       {
+        "fromPath": "src/cli/index.test.ts",
+        "toPath": "package.json",
+        "sourcePath": "src/cli/index.test.ts"
+      },
+      {
+        "fromPath": "src/cli/index.test.ts",
+        "toPath": "src/capabilities/index.ts",
+        "sourcePath": "src/cli/index.test.ts"
+      },
+      {
+        "fromPath": "src/cli/index.test.ts",
+        "toPath": "src/cli/index.ts",
+        "sourcePath": "src/cli/index.test.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "package.json",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
+        "fromPath": "src/cli/index.ts",
+        "toPath": "src/capabilities/index.ts",
+        "sourcePath": "src/cli/index.ts"
+      },
+      {
         "fromPath": "src/cli/index.ts",
         "toPath": "src/cli/commands/automation/disable.ts",
         "sourcePath": "src/cli/index.ts"
@@ -3428,34 +3470,28 @@
     ],
     "calls": [
       {
-        "fromSymbol": "src/cli/index.ts",
-        "toSymbol": "readPackageVersion",
-        "callExpression": "readPackageVersion",
-        "sourcePath": "src/cli/index.ts"
+        "fromSymbol": "src/cli/index.test.ts",
+        "toSymbol": "test",
+        "callExpression": "test",
+        "sourcePath": "src/cli/index.test.ts"
       },
       {
-        "fromSymbol": "readPackageVersion",
-        "toSymbol": "readFileSync",
-        "callExpression": "readFileSync",
-        "sourcePath": "src/cli/index.ts"
+        "fromSymbol": "src/cli/index.test.ts",
+        "toSymbol": "expect",
+        "callExpression": "expect",
+        "sourcePath": "src/cli/index.test.ts"
       },
       {
-        "fromSymbol": "readPackageVersion",
-        "toSymbol": "resolve",
-        "callExpression": "resolve",
-        "sourcePath": "src/cli/index.ts"
+        "fromSymbol": "src/cli/index.test.ts",
+        "toSymbol": "isCapability",
+        "callExpression": "isCapability",
+        "sourcePath": "src/cli/index.test.ts"
       },
       {
-        "fromSymbol": "readPackageVersion",
-        "toSymbol": "dirname",
-        "callExpression": "dirname",
-        "sourcePath": "src/cli/index.ts"
-      },
-      {
-        "fromSymbol": "readPackageVersion",
-        "toSymbol": "fileURLToPath",
-        "callExpression": "fileURLToPath",
-        "sourcePath": "src/cli/index.ts"
+        "fromSymbol": "src/cli/index.test.ts",
+        "toSymbol": "areCapabilitiesEqual",
+        "callExpression": "areCapabilitiesEqual",
+        "sourcePath": "src/cli/index.test.ts"
       },
       {
         "fromSymbol": "runCheckedProcessAsync",

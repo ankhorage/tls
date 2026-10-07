@@ -1,5 +1,11 @@
 # @ankhorage/tls
 
+## 0.2.1
+
+### Patch Changes
+
+- eb83dd4: Publish canonical TLS capability descriptors and align Ankh discovery with Contracts 24.1.
+
 ## 0.2.0
 
 ### Minor Changes

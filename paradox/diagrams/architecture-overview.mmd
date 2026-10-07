@@ -4,6 +4,10 @@ graph TD
   package__ankhorage_tls --> entrypoint_src_cli_index_ts
   entrypoint_src_index_ts["src/index.ts"]
   package__ankhorage_tls --> entrypoint_src_index_ts
+  module_package_json["package.json"]
+  package__ankhorage_tls -.-> module_package_json
+  module_src_capabilities_index_ts["src/capabilities/index.ts"]
+  package__ankhorage_tls -.-> module_src_capabilities_index_ts
   module_src_cli_commands_automation_disable_ts["src/cli/commands/automation/disable.ts"]
   package__ankhorage_tls -.-> module_src_cli_commands_automation_disable_ts
   module_src_cli_commands_automation_disable_ts --> module_src_features_automation_application_use_cases_disableRenewalAutomationAsync_ts
@@ -39,7 +43,14 @@ graph TD
   module_src_cli_commands_status_ts --> module_src_cli_utils_parseTlsRuntimeOptions_ts
   module_src_cli_commands_status_ts --> module_src_features_certificates_application_use_cases_readCertificateStatusAsync_ts
   module_src_cli_commands_status_ts --> module_src_features_certificates_composition_createCertificateRuntimeAsync_ts
+  module_src_cli_index_test_ts["src/cli/index.test.ts"]
+  package__ankhorage_tls -.-> module_src_cli_index_test_ts
+  module_src_cli_index_test_ts --> module_package_json
+  module_src_cli_index_test_ts --> module_src_capabilities_index_ts
+  module_src_cli_index_test_ts --> module_src_cli_index_ts
   module_src_cli_index_ts["src/cli/index.ts"]
+  module_src_cli_index_ts --> module_package_json
+  module_src_cli_index_ts --> module_src_capabilities_index_ts
   module_src_cli_index_ts --> module_src_cli_commands_automation_disable_ts
   module_src_cli_index_ts --> module_src_cli_commands_automation_enable_ts
   module_src_cli_index_ts --> module_src_cli_commands_automation_status_ts
