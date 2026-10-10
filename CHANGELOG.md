@@ -1,5 +1,11 @@
 # @ankhorage/tls
 
+## 0.2.2
+
+### Patch Changes
+
+- b64d0c8: Migrate capability declarations and generic catalog validation to the standalone capability APIs.
+
 ## 0.2.1
 
 ### Patch Changes
