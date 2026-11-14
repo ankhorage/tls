@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "kind": "library",
+  "title": "Ankhorage TLS",
+  "summary": "Provides provider-agnostic TLS certificate lifecycle and automation.",
+  "purpose": "Offer a reusable boundary for certificate issuance, renewal, status, and renewal scheduling.",
+  "domain": "TLS certificate management",
+  "responsibilities": [
+    "Provide certificate issuance, renewal, status, and automation capabilities.",
+    "Expose TLS CLI and capability-provider entrypoints.",
+    "Keep certificate lifecycle operations behind a provider-agnostic package boundary."
+  ],
+  "boundaries": [
+    "Does not provide a hosting platform or web-server deployment.",
+    "Does not make certificate authority availability or domain control guarantees."
+  ],
+  "audience": [
+    "Infrastructure and application operators that automate TLS certificate lifecycle tasks."
+  ],
+  "useCases": [
+    "Preflight and issue certificates for configured domains.",
+    "Renew due certificates and inspect persisted certificate status.",
+    "Enable or inspect daily renewal scheduling."
+  ],
+  "architecture": {
+    "role": "A provider-agnostic TLS lifecycle library with CLI and capability-provider boundaries.",
+    "invariants": [
+      "TLS operations are exposed through explicit package entrypoints.",
+      "Automation scheduling remains an explicit lifecycle capability."
+    ]
+  },
+  "constraints": {
+    "platforms": ["Node.js"],
+    "limitations": [
+      "Certificate authority, domain validation, and host prerequisites are controlled by external systems."
+    ]
+  }
+}
