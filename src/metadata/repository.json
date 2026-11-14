@@ -30,9 +30,7 @@
     ]
   },
   "constraints": {
-    "platforms": [
-      "Node.js"
-    ],
+    "platforms": ["Node.js"],
     "limitations": [
       "Certificate authority, domain validation, and host prerequisites are controlled by external systems."
     ]
