@@ -1,5 +1,11 @@
 # @ankhorage/tls
 
+## 0.2.3
+
+### Patch Changes
+
+- ab68e6d: Add canonical repository metadata for package discovery and documentation.
+
 ## 0.2.2
 
 ### Patch Changes
